@@ -1,0 +1,399 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #2: scRNAseq Technologies"
+author: "Jonathan Nelson and Jeremiah Reyes"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+set.seed(12345)
+# here()
+
+```
+
+# Welcome
+
+![](`r here::here("Images", "Welcome.png")`)
+
+Welcome to the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Expectations
+
+**My expectation** is that we have **about 6 of these meetings** (we're on **2 of 6**) together and then we can re-evaluate if we want to continue as a group or not. 
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Images", "Updated_Schedule.png")`)
+
+# The Agenda!
+
+![](`r here::here("Images", "Agenda.png")`)
+
+## Music and Memes
+## Coding Crumbs
+## Recreating a Figure
+## Main Theme: Single-Cell Experimental Approaches
+
+# Music and Memes
+
+## This Months Coding Music
+
+**Cigarettes after Sex**: Tejano Blue
+
+https://open.spotify.com/track/383EQ8PDAlqzSe4ayyn2Ct?si=bf7a709fe95146e8
+
+![](`r here::here("Images", "Cigarettes.png")`)
+
+## The Memes!
+
+![](`r here::here("Images", "Bioinformatics meme.png")`)
+
+# Coding Crumbs
+
+![](`r here::here("Images", "Coding_Crumbs2.webp")`)
+
+## Who has code that looks like this?
+
+![](`r here::here("Images", "Multiple_Objects.png")`)
+
+### That's called the **Multiple Object Option**
+
+### There is also the **Nested Option**
+
+![](`r here::here("Images", "Nested_Option.png")`)
+
+### Or...the **Piping Option**
+
+![](`r here::here("Images", "Piping_Option.png")`)
+
+## Piping
+
+![](`r here::here("Images", "Pipe_logo.png")`)
+
+**Great Article** on Type Piping -> https://uc-r.github.io/pipe <br>
+**Reference** to magrittr package -> https://magrittr.tidyverse.org/
+
+## Piping verbage
+
+![](`r here::here("Images", "Piping_Verbage.png")`)
+
+## Feed into Plots
+
+![](`r here::here("Images", "Pipe_Plots.png")`)
+
+## Integration into other packages
+
+![](`r here::here("Images", "Pipe_Packages.png")`)
+
+## Special Cases
+
+### **%T>%**
+
+![](`r here::here("Images", "Piping_T.png")`)
+
+### **%<>%**
+
+![](`r here::here("Images", "Piping_Compound.png")`)
+
+### **%$%**
+
+![](`r here::here("Images", "Piping_Column.png")`)
+
+## **Take Home**
+
+**Piping** is a great way to **clean up your code** and make it more **readable**!
+
+**Practically**: I usually write code as **multiple objects** and then convert to **piping**.
+
+# Let's Recreate a Figure!
+
+![](`r here::here("Images", "Replica.png")`)
+
+## Upset Plots
+
+### Complicated Venn Diagrams
+
+![](`r here::here("Images", "Potter.png")`)
+
+https://pubmed.ncbi.nlm.nih.gov/28851704/
+
+### Simplify Intersections with Upset Plots
+
+![](`r here::here("Images", "Upset_Example.png")`)
+
+https://www.nature.com/articles/s41467-022-32972-z
+
+### Packages I Use
+
+**UpSetR** <br>
+**ComplexHeatmap** <br>
+
+https://jokergoo.github.io/ComplexHeatmap-reference/book/upset-plot.html
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+if (!require("UpSetR")) {install.packages("UpSetR"); require("UpSetR")}
+if (!require("ComplexHeatmap")) {install.packages("ComplexHeatmap"); require("ComplexHeatmap")}
+
+```
+
+### Steps
+
+0) Create DEG lists <br>
+1) Organize a set of lists <br>
+2) Make Combination Matrix <br>
+3) Plot the Upset Plot <br>
+
+### Real World Example
+
+FindAllMarkers -> Upset Plot
+
+#### Proximal Tubule Cells of the Kidney after Injury
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+SO <- readRDS(here("Data", "All_PT.rds"))
+
+SO2 <- NormalizeData(object = SO)
+SO2 <- FindVariableFeatures(object = SO2)
+SO2 <- ScaleData(object = SO2)
+SO2 <- RunPCA(object = SO2)
+SO2 <- FindNeighbors(object = SO2, dims = 1:30)
+SO2 <- RunUMAP(object = SO2, dims = 1:30)
+
+Idents(SO2) <- SO2@meta.data$subclass.All
+
+SO@meta.data$subclass.All <- factor(SO@meta.data$subclass.All, levels = c("PTS1", "PTS2", "PTS3", "PTinj")) 
+
+Idents(SO) <- SO@meta.data$subclass.All
+
+DimPlot(SO)+
+  ylab("UMAP 2") +
+  xlab("UMAP 1") +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.line = element_line(size = 1, colour = "black"),
+    axis.text = element_blank(),          # Remove axis text
+    axis.ticks = element_blank(),         # Optional: Remove axis ticks
+    text = element_text(size = 20)
+  ) + ggtitle("Proximal Tubule Cell Types") 
+
+```
+
+#### Step 0: FindAllMarkers to Create DEG Lists
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df <- FindAllMarkers(SO, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+df %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
+
+top5 <- df %>% distinct(gene, .keep_all = TRUE) %>% group_by(cluster) %>% top_n(5, avg_log2FC)
+
+DoHeatmap(SO2, features = top5$gene) + NoLegend()
+
+DotPlot(SO,
+        features = top5$gene,
+        cols = c("#0099ff", "#dc143c"),
+        dot.scale = 8,
+           dot.min = 0,
+           scale.max = 100,
+           scale.min = 0,
+           col.min = -2.5,
+           col.max = 2.5) + 
+ # scale_y_discrete(limits = c(Prol"MD", "TAL β", "TAL α")) + 
+  theme(axis.text.x = element_text(),
+        axis.title = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 9)) + 
+  RotatedAxis() + 
+  ggtitle("Top 5 Proximal Tubule DEG") 
+
+?DoHeatmap
+
+```
+
+#### Step 1: **Split** the dataframe into lists
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+clustered_genes <- split(df$gene, df$cluster)
+
+str(clustered_genes)
+
+```
+
+
+#### Step 2: **Create** a matrix
+
+```{r echo=TRUE, eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE, results='hide'}
+
+list_to_matrix(clustered_genes)
+
+df2 <- list_to_matrix(clustered_genes)
+
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+head(df2)
+
+m1 <-  make_comb_mat(clustered_genes)
+m1
+
+```
+
+#### Step 3: **Plot** the Upset Plot
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+UpSet(m1, set_order = c("PTS1", "PTS2", "PTS3", "PTinj"), comb_order = order(comb_size(m1)))
+
+```
+
+### Extract information
+
+#### Extract PTS1
+ 
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+extract_comb(m1,"1000")
+
+```
+
+#### Sanity Check
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+VlnPlot(SO, features = c("0610040J01Rik"), pt.size = 0) +
+  theme(axis.line = element_line(size = 1, colour = "black"),
+        text = element_text(size=20),
+        axis.text.x = element_text(color = "black", size = 16, angle = 45, hjust = 1, vjust = 1),
+        legend.position = "none"
+        ) + xlab("") 
+
+```
+
+
+#### Extract PTS2:PTS3
+ 
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+extract_comb(m1,"0110")
+
+```
+
+#### Sanity Check
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+VlnPlot(SO, features = c("0610005C13Rik"), pt.size = 0) +
+  theme(axis.line = element_line(size = 1, colour = "black"),
+        text = element_text(size=20),
+        axis.text.x = element_text(color = "black", size = 16, angle = 45, hjust = 1, vjust = 1),
+        legend.position = "none"
+        ) + xlab("") 
+
+```
+
+# Main Theme
+
+## Today's **"SCORE Star"**: Jeremiah Reyes
+
+![](`r here::here("Images", "Jeremiah.jpg")`)
+
+### **MD/PhD Student** in the Ellison Lab at Oregon Health & Science University
+
+### **Pioneered** a lot of the bioinformatic analysis that we use today!
+
+#### Pathways Analysis with **clusterProfiler**
+
+![](`r here::here("Images", "JVR1.png")`)
+
+#### Creating and Interpreting **Composite Genes Scores**
+
+![](`r here::here("Images", "JVR2.png")`)
+
+### **Author** on the DCT-INTACT JASN Manuscript
+
+![](`r here::here("Images", "JASNCover2.jpeg")`)
+
+![](`r here::here("Images", "JASN Authors.png")`)
+
+### Now **physician-scientist** at the **Philippine Genome Center**
+
+### Interests Include: Single-cell transcriptomics, kidney cell biology, tubulopathies
+
+### We are **increadibly lucky** to have him present to us today!
+
+## Upcoming Schedule
+
+![](`r here::here("Images", "Updated_Schedule.png")`)
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

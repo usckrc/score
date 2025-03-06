@@ -1,3 +1,8 @@
+JWN additions
+
+# r object
+*.rds
+
 # History files
 .Rhistory
 .Rapp.history

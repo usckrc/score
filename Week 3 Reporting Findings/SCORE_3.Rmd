@@ -1,0 +1,693 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #3: Reporting Data"
+author: "Jonathan Nelson"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+set.seed(12345)
+# here()
+
+```
+
+# Welcome
+
+![](`r here::here("Images", "Welcome.png")`)
+
+Welcome to the first meeting meeting of the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Context and Expectations
+
+I know a lot of this has been going on in the background for everyeone and I wanted to bring it to the forefront. **My expectation** is that we have **about 6 of these meetings** together and then we can re-evaluate if we want to continue as a group or not.
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Images", "SCORE1_Screenshot.png")`)
+
+# The Agenda!
+
+![](`r here::here("Images", "Agenda.png")`)
+
+## My Story
+## Music and Memes
+## Coding Crumbs
+## Recreating a Figure
+## Main Theme: Seurat v5
+
+# My Story
+
+![](`r here::here("Images", "MyStory.png")`)
+
+## **Wet-to-Dry** Scientist
+
+### PhD
+
+PhD -> **No coding/bioinformatics**
+
+I studied **biochemistry, physiology, and genetics**
+
+**Thesis Title**: Disruption of Soluble Epoxide Hydrolase as a Therapeutic Target for Stroke
+
+### Postdoc
+
+Started with some **bulk RNAseq** (upset at lack of tools for people who didn't know how to code)
+
+Was **constantly** being asked by others about the expression level in a dataset.
+
+So I created an web app in Shiny: https://kcvi.shinyapps.io/START/
+
+![](`r here::here("Images", "START1.png")`)
+
+![](`r here::here("Images", "START2.png")`)
+
+### Junior Faculty
+
+#### **Single-Cell** goes mainstream
+
+![](`r here::here("Images", "scRNASeq.png")`)
+
+#### **COVID19**: Time to Learn To Code
+
+![](`r here::here("Images", "COVID.png")`)
+
+#### **Building Community**: Renal Omics Club (ROC)
+
+![](`r here::here("Images", "Topics.png")`)
+
+#### Senior Author on a **Bioinformatics Paper**
+
+![](`r here::here("Images", "JASNCover2.jpeg")`)
+
+## Imposter Syndrome
+
+![](`r here::here("Images", "Imposter.png")`)
+
+## What have I gained from learning bioinformatics?
+
+### **Independent analysis** of my own datasets
+### I **think** about data differently now
+### Opened up analysis of **published datasets**
+### Pathway to **collaboration**
+
+## It's a **Commitment** to learn informatics...but **worth it**. 
+
+# Music and Memes
+
+## This Months Coding Music
+
+**Wolf Alice**: Don't Delete The Kisses 
+
+https://open.spotify.com/track/1hZyADicbo5k0OQbwcxVEo?si=27d712cd975c4957
+
+![](`r here::here("Images", "WolfAlice.png")`)
+
+## The Memes!
+
+![](`r here::here("Images", "Meme.jpg")`)
+
+# Coding Crumbs
+
+![](`r here::here("Images", "Coding_Crumbs2.webp")`)
+
+## Who has code that looks like this?
+
+df2 <br>
+df.2 <br>
+df_2 <br>
+Df_2 <br>
+DF_2 <br>
+
+## Type Cases
+
+**Great Article** on Type Cases -> https://www.alexhyett.com/snake-case-vs-camel-case-vs-pascal-case-vs-kebab-case/
+
+### Each of these names has a different name
+
+![](`r here::here("Images", "CodingCase.png")`)
+
+## Names Matter!
+
+### Increadible important for R -> **Case Sensative**
+
+### Also increadible important to **be consistent when collaborating** on code
+
+### What is **Consensus in the Community?**
+
+https://stackoverflow.com/questions/1944910/what-is-your-preferred-style-for-naming-variables-in-r
+
+![](`r here::here("Images", "CodingCaseStack.png")`)
+
+### What am I going to do?
+
+I'm trying to consistently use **PascalCase** for my objects in R.
+
+## Take Home
+
+While you have a lot of flexibility in naming objects in R, **I'd encourage you to be more intentional and consistent** with how you decide to name your objects. 
+
+# Let's Recreate a Figure!
+
+![](`r here::here("Images", "Replica.png")`)
+
+### Venn Diagrams
+
+![](`r here::here("Images", "Potter.png")`)
+
+https://pubmed.ncbi.nlm.nih.gov/28851704/
+
+#### Packages I Use
+
+**ggvenn** -> Good for visualizing plots
+
+https://github.com/NicolasH2/ggvenn
+
+**gplots** -> Good for identifying genes in categories
+
+https://talgalili.github.io/gplots/index.html
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+if (!require("gplots")) {install.packages("gplots"); require("gplots")}
+if (!require("ggvenn")) {install.packages("ggvenn"); require("ggvenn")}
+
+```
+
+## DEG Lists
+
+![](`r here::here("Images", "DEGlists.png")`)
+
+### Make the Lists
+
+**ggvenn package**
+
+**Maximum of 7 comparisons**, but really...is it possible to read that many? Better to do and **Upset Plot** (Next SCORE?) 
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+set1 <- rownames(DEGA)
+set2 <- rownames(DEGB)
+venn <- ggvenn(list(DEGA = set1, DEGB = set2))
+print(venn)
+
+```
+
+![](`r here::here("Images", "Venn1.png")`)
+
+### Find the Intersections
+
+**gplots package**
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+lst <- list(set1, set2)
+ItemsList <- venn(lst, show.plot = TRUE)
+
+test <- attributes(ItemsList)$intersections
+
+head(test$A, 5)
+
+head(test$B, 5)
+
+head(test$'A:B', 5)
+
+```
+
+![](`r here::here("Images", "Venn2.png")`)
+
+# Main Theme
+
+## Updates to Seurat v5
+
+![](`r here::here("Images", "SeuratV5_7.png")`)
+
+Seurat is a **popular R package** for **single-cell RNAseq** analysis, pioneer by the **Sataja lab**.
+
+![](`r here::here("Images", "SeuratWebsite.png")`)
+
+https://satijalab.org/seurat/
+
+### Seurat v5 Manuscript
+
+![](`r here::here("Images", "Seurat_Paper.png")`)
+
+https://www.nature.com/articles/s41587-023-01767-y
+
+### Seurat v5 Citation (**Different** than Seurat v4 Citation)
+
+Hao, Y., Stuart, T., Kowalski, M.H. et al. Dictionary learning for integrative, multimodal and scalable single-cell analysis. Nat Biotechnol 42, 293–304 (2024). https://doi.org/10.1038/s41587-023-01767-y
+
+## I had a Dream!
+
+![](`r here::here("Images", "Dream.png")`)
+
+### People 10 years from now could **use my code** for the same analysis.
+### Seurat updating made me realize that the **bioinformatics landscape is always evolving**.
+### **REALLY IMPORTANT** to document the versions of packages you are using (**sessionInfo()**).
+
+## **Challenges** that I've had with Seurat v5
+
+![](`r here::here("Images", "Challenges.png")`)
+
+### Objects made in Seurat v4 **aren't compatible** Seurat v5 (or vice versa)
+### DEG lists I created with Seurat v4 **aren't the same** as Seurat v5
+### Integration pipeline code **different**
+### Packages that updated for Seurat v5 **don't work** with Seurat v4
+
+## Installing Current Version of Seurat (Seurat v5)
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+# Enter commands in R (or R studio, if installed)
+install.packages('Seurat')
+library(Seurat)
+
+```
+
+## Installing older versions of Seurat (Seurat v4)
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+# Install the remotes package 
+install.packages('remotes')
+
+# Replace 'X.X.X' with your desired version
+# My current version is 4.4.0
+
+remotes::install_version(package = 'Seurat', version = package_version('X.X.X'))remotes::install_version("Seurat", "4.4.0", repos = c("https://satijalab.r-universe.dev", getOption("repos")))
+
+```
+
+### Sataja Lab Release Notes on Update
+
+https://satijalab.org/seurat/articles/announcements.html
+
+![](`r here::here("Images", "Seuratv5Notes0.png")`)
+
+### Updates to the File Format of Seurat Objects
+
+![](`r here::here("Images", "Seuratv5Notes1.png")`)
+
+### Updates to the Integration Pipeline Code
+
+![](`r here::here("Images", "Seuratv5Notes2.png")`)
+
+#### Sataja Code
+
+https://satijalab.org/seurat/articles/integration_introduction
+
+![](`r here::here("Images", "Integrate.png")`)
+
+#### Example Code
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+# Uploading and Analyzing Two snRNAseq Datasets
+
+SO1 <- Read10X_h5(here("MH1_filtered_feature_bc_matrix.h5"))
+SO2 <- Read10X_h5(here("MH3_filtered_feature_bc_matrix.h5"))
+
+SO1 <- CreateSeuratObject(counts = SO1, project = "Dataset", min.cells = 3, min.features = 200)
+SO2 <- CreateSeuratObject(counts = SO2, project = "Dataset", min.cells = 3, min.features = 200)
+
+# Add meta data to each object to keep track of them.
+
+# In this case, SO1 is *Sham* and SO2 is treated with *CACPR*. I'm adding this information to the same metadata column that is called *Condition*
+
+SO1 <- AddMetaData(object = SO1, metadata = "CACPR", col.name = "Condition")
+SO2 <- AddMetaData(object = SO2, metadata = "Sham", col.name = "Condition")
+
+# Merging and Normal scRNAseq Analysis Pipeline
+
+# It's possible to merge more than 2 objects together by concatenating the `y =` term to `y = c(SO2, SO3)`
+
+SOmerged <- merge(SO1, y = c(SO2), add.cell.ids = c("CACPR", "Sham"), project = "Kidney")
+
+# check on metadata and level it.
+
+head(SOmerged@meta.data)
+
+SOmerged@meta.data$Condition <- factor(SOmerged@meta.data$Condition, levels = c("Sham", "CACPR"))
+
+SOmerged <- NormalizeData(SOmerged, normalization.method = "LogNormalize", scale.factor = 10000)
+SOmerged <- FindVariableFeatures(SOmerged, selection.method = "vst", nfeatures = 2000)
+SOmerged.genes <- rownames(SOmerged)
+SOmerged <- ScaleData(SOmerged, features = SOmerged.genes)
+SOmerged <- RunPCA(SOmerged, features = VariableFeatures(object = SOmerged))
+SOmerged <- FindNeighbors(SOmerged, dims = 1:15)
+SOmerged <- FindClusters(SOmerged, resolution = 0.1)
+SOmerged <- RunUMAP(SOmerged, dims = 1:15)
+
+DimPlot(SOmerged, reduction = "umap")
+DimPlot(SOmerged, reduction = "umap", group.by = "Condition")
+
+# Notice that there is almost a complete separation between *Sham* and *CACPR* samples. This is probably the combination of a strong
+
+# To find genes that are shared between these two samples that can be used as anchors to cluster similar cells between the two sample we will use the *FindIntegrationAnchors* pipeline that was intiaily developed by former PSI high school student Annie Lackey which she learned from the Seurat website. 
+
+# https://satijalab.org/seurat/articles/integration_introduction.html
+
+# FindIntegration Anchors Pipeline
+
+#In order to solve this problem we turn to a feature of Seurat that helps us integrate data. To prep the data we first have to split the object by treatment group. This creates the new feature `SOmerged.list`, so we can continue with standard normalization and finding the features of the new object.
+
+# split the RNA measurements into two layers one for control cells, one for stimulated cells
+
+SOmerged.integrated <- IntegrateLayers(object = SOmerged, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+    verbose = FALSE)
+
+# re-join layers after integration
+SOmerged.integrated[["RNA"]] <- JoinLayers(SOmerged.integrated[["RNA"]])
+
+SOmerged.integrated <- FindNeighbors(SOmerged.integrated, reduction = "integrated.cca", dims = 1:30)
+SOmerged.integrated <- FindClusters(SOmerged.integrated, resolution = 1)
+SOmerged.integrated <- RunUMAP(SOmerged.integrated, dims = 1:30, reduction = "integrated.cca")
+
+DimPlot(SOmerged.integrated, reduction = "umap")
+DimPlot(SOmerged.integrated, reduction = "umap", group.by = c("Condition"))
+
+# Comparison of Merged and Integrated Pipelines
+
+# Notice the addition of the ggplot2 code that is layered onto the `DimPlot` function in order to modify the appearance of the graph for clarity as `+ ggtitle("Merged")`.
+
+DimPlot(SOmerged, reduction = "umap", group.by = "Condition") + ggtitle("Merged")
+
+DimPlot(SOmerged.integrated, reduction = "umap", group.by = "Condition") + ggtitle("Integrated")
+
+# Using Patchwork place the graphs side-by-side
+
+f1 <- DimPlot(SOmerged, reduction = "umap", group.by = "Condition") + ggtitle("Merged")
+
+f2 <- DimPlot(SOmerged.integrated, reduction = "umap", group.by = "Condition") + ggtitle("Integrated")
+
+f1 + f2
+
+rm(SOmerged, SOmerged.integrated)
+
+```
+
+### Updates to DEG Calculations
+
+![](`r here::here("Images", "Seuratv5Notes3.png")`)
+
+![](`r here::here("Images", "DEGs.png")`)
+
+### Updates to SCTransform
+
+![](`r here::here("Images", "Seuratv5Notes4.png")`)
+
+### Updates to Pseudobulk
+
+![](`r here::here("Images", "Seuratv5Notes5.png")`)
+
+### Magnetic Force of Seurat
+
+#### DoubletFinder
+
+https://github.com/chris-mcginnis-ucsf/DoubletFinder
+
+![](`r here::here("Images", "DoubletFinder.png")`)
+
+## Current Seurat v5 pre-processesing pipeline code
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+# Removing Ambient RNA with SoupX
+
+# The current strategy that we use to remove doublets relies on [(Young and Behjati, 2020)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7763177/)
+
+# In order for this code to work you need both the *raw_feature_bc_matrix* in addition to the *filteredfiltered_feature_bc_matrix*. 
+# This pipeline was written by former visiting medical student [(Jeremiah Reyes)](https://twitter.com/imyourNephBro). 
+
+tod = Read10X_h5(here("1_raw_feature_bc_matrix.h5")) #Change
+toc = Read10X_h5(here("1_filtered_feature_bc_matrix.h5")) #Change 
+sc = SoupChannel(tod,toc)
+
+#Make the Seurat object from the filtered control data
+SO <- Read10X_h5(here("1_filtered_feature_bc_matrix.h5")) #Change 
+SO <- CreateSeuratObject(counts = SO, project = "Peri-INTACT")  #Change
+
+#Cluster the cells with Seurat
+SO <- SCTransform(SO, verbose = F)
+SO <- RunPCA(SO, verbose = F)
+SO <- RunUMAP(SO, dims = 1:30, verbose = F)
+SO <- FindNeighbors(SO, dims = 1:30, verbose = F)
+SO <- FindClusters(SO, verbose = T)
+ 
+meta <- SO@meta.data
+umap <- SO@reductions$umap@cell.embeddings
+clusters <- setNames(meta$seurat_clusters, rownames(meta))
+
+#Sanity Check
+length(clusters) #should be equal to nrow(sc$metaData)
+nrow(sc$metaData)
+
+sc <- setClusters(sc, clusters)
+sc <- setDR(sc, umap)
+
+#Estimate rho
+sc = autoEstCont(sc)
+
+#Clean the data
+SO_out = adjustCounts(sc)
+ 
+#Create a new Seurat Object out of the cleaned data
+seurat.obj <- CreateSeuratObject(SO_out)
+
+# Remove Doublets with the Doublet Detector Package
+
+# The output of the SoupX chunck feeds right into the doublet detector pipline which is based on [(McGinnis et al., 2019)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6853612/).  
+
+VlnPlot(seurat.obj, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2)
+
+# Minimal QC and Filtering (low quality cells) to let doublet find doublets
+
+seurat.obj.f <- subset(seurat.obj, nFeature_RNA > 500)
+
+VlnPlot(seurat.obj.f, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2)
+
+seurat.obj.f
+
+# Pre-process standard workflow
+seurat.obj.f <- NormalizeData(object = seurat.obj.f)
+seurat.obj.f <- FindVariableFeatures(object = seurat.obj.f)
+seurat.obj.f <- ScaleData(object = seurat.obj.f)
+seurat.obj.f <- RunPCA(object = seurat.obj.f)
+ElbowPlot(seurat.obj.f, ndims = 40)
+
+# PCs between 15-20
+seurat.obj.f <- FindNeighbors(object = seurat.obj.f, dims = 1:30)
+seurat.obj.f <- FindClusters(object = seurat.obj.f, resolution = 0.03)
+seurat.obj.f <- RunUMAP(object = seurat.obj.f, dims = 1:30)
+DimPlot(seurat.obj.f, reduction = "umap")
+
+# paramSweep
+
+# A very time-consuming step.
+
+# Calculate each combination of pN and pK
+sweep.res.list_seurat.obj.f <- paramSweep(seurat.obj.f, PCs = 1:20, sct = FALSE) 
+
+# summarizeSweep
+
+#Summarize each combination of pN and pK
+sweep.stats_seurat.obj.f <- summarizeSweep(sweep.res.list_seurat.obj.f, GT = FALSE) 
+
+#Select the pK that corresponds to max bcmvn to optimize doublet detection
+bcmvn_seurat.obj.f <- find.pK(sweep.stats_seurat.obj.f)
+pK <- bcmvn_seurat.obj.f %>% 
+  filter(BCmetric == max(BCmetric)) %>%
+  select(pK) 
+
+#See pK in the Values Environment
+pK <- as.numeric(as.character(pK[[1]]))
+
+# summarizeSweep
+
+# Homotypic Doublet Proportion Estimate
+annotations <- seurat.obj.f@meta.data$seurat_clusters  
+ 
+homotypic.prop <- modelHomotypic(annotations)           
+homotypic.prop
+ 
+# 10X Multiplet Rate Table (the doublet ratio is # of cells recovered divided by 125000) https://kb.10xgenomics.com/hc/en-us/articles/360001378811-What-is-the-maximum-number-of-cells-that-can-be-profiled-
+ 
+nrow(seurat.obj.f@meta.data)
+
+# This automates the number of doublets based on the number of cells in the Seurat object
+# This addition was made by Xiao-Tong Su, postdoc at OHSU in the Ellison Lab
+
+nExp_poi <- round(nrow(seurat.obj.f@meta.data) # To calculate cell number
+                  /125000              # To calculate the doublet ratio
+                  *nrow(seurat.obj.f@meta.data))
+nExp_poi
+
+nExp_poi_adj <- round(nExp_poi*(1-homotypic.prop))
+ 
+# doubletFinder
+
+seurat.obj.f_doublets <- doubletFinder(seurat.obj.f,
+                        PCs = 1:20,
+                        pN = 0.25,
+                        pK = pK,
+                        nExp = nExp_poi_adj,
+                        reuse.pANN = FALSE, sct = FALSE)
+colnames(seurat.obj.f_doublets@meta.data)[6] <- "pANN"
+colnames(seurat.obj.f_doublets@meta.data)[7] <- "DF.class"
+head(seurat.obj.f_doublets@meta.data)
+table(seurat.obj.f_doublets@meta.data$DF.class)
+
+DimPlot(seurat.obj.f_doublets, group.by = "DF.class")
+
+VlnPlot(seurat.obj.f_doublets, "nFeature_RNA", group.by = "DF.class")
+
+VlnPlot(seurat.obj.f_doublets, "nCount_RNA", group.by = "DF.class")
+
+# Subset Singlets
+
+seurat.obj.f_singlets <- subset(seurat.obj.f_doublets, DF.class == "Singlet")
+seurat.obj.f_singlets
+DimPlot(seurat.obj.f_singlets, reduction = "umap")
+
+# Remove Mitochondrial Genes
+
+# Because it isn't clear what the percentage of mitochondrial genes means in a single-*nucleus* RNAseq dataset, we will take out all the mitochondrial genes to remove thier effect on clustering. However, before we remove them from the dataset, we will calculate their values and *stash* them in the metadata. 
+
+seurat.obj.f_singlets <- seurat.obj.f_singlets[!grepl("^mt-", rownames(seurat.obj.f_singlets)), ]
+
+# Mito Sanity Check
+counts <- GetAssayData(seurat.obj.f_singlets, assay = "RNA")
+mito.genes <- grep(pattern = "^mt-", x = rownames(x = counts), value = TRUE) 
+mito.genes #should be zero
+
+DimPlot(seurat.obj.f_singlets, reduction = "umap", label = T)
+
+# Initial Cluster Identification
+
+# This is a generic pipeline that I use to identify the cell clusters in an unbiased way. 
+
+seurat.obj.f_singlets.markers <- FindAllMarkers(seurat.obj.f_singlets, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+seurat.obj.f_singlets.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 5, wt = avg_log2FC) -> top5
+
+DoHeatmap(seurat.obj.f_singlets, features = top5$gene) + NoLegend()
+
+seurat.obj.f_singlets.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_log2FC) -> top2
+
+VlnPlot(seurat.obj.f_singlets, 
+        features = unique(top2$gene),
+        stack = TRUE, 
+        flip = TRUE,
+        pt.size = 0)+
+        NoLegend()
+
+# Dotplot
+
+# This dotplot code was writen by former PSI student Annie Lackey and has been a go-to for the color scheme for dot plots ever since. 
+
+DotPlot(seurat.obj.f_singlets, features = unique(top2$gene), dot.scale = 8, cols = c("dodgerblue2", "coral2")) + RotatedAxis()
+
+# Save Output Files
+
+# This is the code to save the seurat object to it keeps all of it's analysis information including clustering information. The most important part of the code here is to make sure to include a *.rds* at the end of the name. 
+
+#saveRDS(seurat.obj.f_singlets, here("Singlets.rds)) #Change
+
+```
+
+## Current Solution
+
+### I keep **2 Computers** (One with Seurat v4 and One with Seurat v5)
+
+![](`r here::here("Images", "TwoComputers.png")`)
+
+# Closing Remarks
+
+I hope that you found this session helpful.
+
+## Would anyone else like to **share their experience with Seurat v5**?
+
+## Questions?
+
+![](`r here::here("Images", "Questions.png")`)
+
+## Community Questions
+
+Do you have a **coding problem** that you'd like some support on? <br>
+Do you have a **topic** you'd like covered at a future meeting?
+
+Email me: **j.nelson@med.usc.edu**
+
+## Upcoming Schedule
+
+![](`r here::here("Images", "SCORE_Schedule.png")`)
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

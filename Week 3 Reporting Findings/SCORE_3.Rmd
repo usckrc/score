@@ -46,6 +46,8 @@ set.seed(12345)
 
 ```
 
+# Jessica Bahena-Lopez is an amazing scientist
+
 # Welcome
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)

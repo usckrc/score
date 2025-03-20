@@ -1,0 +1,335 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #3: Reporting Data"
+author: "Jonathan Nelson and Jessica Bahena-Lopez"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+library("styler") #tidy up data
+
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+# install.packages("styler")
+
+
+
+set.seed(12345)
+# here()
+
+```
+# Welcome
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
+
+Welcome to the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Context and Expectations
+
+I know a lot of this has been going on in the background for everyeone and I wanted to bring it to the forefront. **My expectation** is that we have **about 6 of these meetings** together and then we can re-evaluate if we want to continue as a group or not.
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
+
+# The Agenda!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
+
+## Music and Memes
+## Coding Crumbs
+
+## Indentation
+
+## Recreating a Figure
+
+
+## Main Theme: Best Practices for Reporting Data
+
+# Music and Memes
+
+## This Months Coding Music
+
+**LAUREL**: Life Worth Living 
+
+https://open.spotify.com/track/1mCvM05OlYWQd77RDxCTLD?si=7d8beb22c2274997
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "life_worth_living.jpg")`)
+
+## The Memes!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "meme2.jpg")`)
+
+# Coding Crumbs
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
+
+## Code Styling in R
+
+### Confession: **I write ugly code**
+
+### And I **LOVE** clean code
+
+### Clean legible code is important for reproducibility
+
+#### Hadley Wickham's Style Guide
+
+http://adv-r.had.co.nz/Style.html
+
+### There is **Help**
+
+#### Option 1: Native R
+
+#### Code > Reformat Code (**Ctrl+Shift+A**)
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10, fig.height=5}
+
+
+```
+
+
+##### Before
+
+##### After
+
+#### Option 2: Styler Package
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "styler_logo.png")`)
+
+https://github.com/r-lib/styler?tab=readme-ov-file
+
+install.packages("styler")
+
+https://www.youtube.com/watch?app=desktop&v=yUA3NpJLH6I&t=220s&t=156
+
+##### Before
+
+##### After
+
+#### Option 3: ChatGPT
+
+##### Before
+
+##### After
+
+# Let's Recreate a Figure!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
+
+## Gantt Charts
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
+
+### History
+
+https://en.wikipedia.org/wiki/Gantt_chart
+
+### Great for Project Management
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Gantt-chart.webp")`)
+
+### ggplot2 Lessons
+
+#### Layering a graph with two different dataframes
+
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10, fig.height=5}
+df <- read.csv(here("Week 3 Reporting Findings", "data", "JWNMentors.csv"))
+
+df2 <- df %>%
+  filter(Mentor %in% c(
+    "University of Washington",
+    "Oregon Health & Science University",
+    "University of Southern California"
+  ))
+
+df3 <- df %>%
+  filter(!Mentor %in% c(
+    "University of Washington",
+    "Oregon Health & Science University",
+    "University of Southern California"
+  ))
+
+g.gantt <- gather(df2, "state", "date", 3:4) %>% mutate(date = as.Date(date, "%m/%d/%Y"))
+
+g.gantt2 <- gather(df3, "state", "date", 3:4) %>% mutate(date = as.Date(date, "%m/%d/%Y"))
+
+# Combine the start and end into a single timeline for each Stage
+g.gantt_combined <- g.gantt %>%
+  arrange(Stage, date) %>%
+  group_by(Stage) %>%
+  summarise(
+    start_date = min(date[state == "Start"]),
+    end_date = max(date[state == "End"]),
+    Mentor = "Institution" # Set as a constant value to show as a single row
+  ) %>%
+  ungroup()
+
+g.gantt$Stage <- factor(g.gantt$Stage, levels = c("University of Washington", "Oregon Health & Science University", "University of Southern California", "Undergraduate", "Graduate School", "Postdoc", "Junior Faculty"))
+
+
+# Set the factor levels for the 'Stage' variable
+g.gantt_combined$Stage <- factor(g.gantt_combined$Stage,
+  levels = c(
+    "University of Washington",
+    "Oregon Health & Science University",
+    "University of Southern California",
+    "Undergraduate",
+    "Graduate School",
+    "Postdoc",
+    "Junior Faculty"
+  )
+)
+
+g.gantt2$Stage <- factor(g.gantt2$Stage,
+  levels = c(
+    "University of Washington",
+    "Oregon Health & Science University",
+    "University of Southern California",
+    "Undergraduate",
+    "Graduate School",
+    "Postdoc",
+    "Junior Faculty"
+  )
+)
+
+desired_order <- rev(c(
+  "Institution", "Staffan Bench", "Benjamin Hall", "Nabil Alkayed",
+  "Paul Barnes", "Sanjiv Kaul", "David Ellison",
+  "Susan Gurley", "Janos Peti-Peterdi"
+))
+
+
+desired_colors <- c(
+  "University of Washington" = "#32006e",
+  "Oregon Health & Science University" = "#575e60",
+  "University of Southern California" = "#990000",
+  "Undergraduate" = "#C5692E",
+  "Graduate School" = "#FEB359",
+  "Postdoc" = "#435F90",
+  "Junior Faculty" = "#B47E83"
+)
+
+ggplot() +
+  # Plot the segments (timeline for each project) from the first dataframe
+  geom_segment(
+    data = g.gantt_combined,
+    aes(x = start_date, xend = end_date, y = Mentor, yend = Mentor, color = Stage),
+    size = 10
+  ) +
+  # Plot the lines (from the second dataframe)
+  geom_line(data = g.gantt2, aes(x = date, y = Mentor, color = Stage), size = 10) +
+  labs(x = "Year", y = NULL, title = "Mentors", color = "Institution and Career Stage") +
+  theme_minimal(base_size = 15) +
+  scale_y_discrete(limits = desired_order) + # Control y-axis order
+  theme(
+    panel.grid = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 18), # Centered title with larger font
+    axis.title = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold"), # Set legend title size and style
+    legend.text = element_text(size = 16),
+    axis.text = element_text(size = 14), # Axis labels and ticks
+    axis.ticks.y = element_blank(), # Remove ticks on y-axis
+    axis.line.y = element_blank() # Remove the y-axis line
+  ) +
+  scale_color_manual(values = desired_colors, na.value = "gray")
+
+```
+
+
+
+# Main Theme
+
+## Best Practices for Reporting Data for Manuscripts
+
+
+## Code: Github
+
+
+## Data: GEO
+
+
+# Closing Remarks
+
+I hope that you found this session helpful.
+
+## Would anyone else like to **share their experience with reporting omics data**?
+
+## Questions?
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Questions.png")`)
+
+## Community Questions
+
+Do you have a **coding problem** that you'd like some support on? <br>
+Do you have a **topic** you'd like covered at a future meeting?
+
+Email me: **j.nelson@med.usc.edu**
+
+## Upcoming Schedule
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

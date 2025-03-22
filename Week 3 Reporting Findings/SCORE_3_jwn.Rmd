@@ -93,13 +93,8 @@ Today's code (**this html file**) will be posted to the SCORE website (https://u
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
 
 ## Music and Memes
-## Coding Crumbs
-
-## Indentation
-
-## Recreating a Figure
-
-
+## Coding Crumbs : R styling
+## Recreating a Figure : Gantt Chart
 ## Main Theme: Best Practices for Reporting Data
 
 # Music and Memes
@@ -116,39 +111,35 @@ https://open.spotify.com/track/1mCvM05OlYWQd77RDxCTLD?si=7d8beb22c2274997
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "meme2.jpg")`)
 
-# Coding Crumbs
+#  Coding Crumbs : R styling
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
 
-## Code Styling in R
+## Confession: **I write ugly code**
 
-### Confession: **I write ugly code**
+## And I **LOVE** clean code
 
-### And I **LOVE** clean code
+## Clean legible code is important for reproducibility
 
-### Clean legible code is important for reproducibility
-
-#### Hadley Wickham's Style Guide
+### Hadley Wickham's Style Guide
 
 http://adv-r.had.co.nz/Style.html
 
-### There is **Help**
+## There is **Help**
 
-#### Option 1: Native R
+### Option 1: **Native R**
 
-#### Code > Reformat Code (**Ctrl+Shift+A**)
+### Code > Reformat Code (**Ctrl+Shift+A**)
 
-```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10, fig.height=5}
+#### Before
 
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
 
-```
+#### After
 
+![](`r here::here("Week 3 Reporting Findings", "Images", "after1.png")`)
 
-##### Before
-
-##### After
-
-#### Option 2: Styler Package
+### Option 2: **Styler Package**
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "styler_logo.png")`)
 
@@ -158,33 +149,43 @@ install.packages("styler")
 
 https://www.youtube.com/watch?app=desktop&v=yUA3NpJLH6I&t=220s&t=156
 
-##### Before
+#### Before
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
+
+#### After
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "after2.png")`)
+
+### Option 3: **ChatGPT**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "chat_prompt.png")`)
+
+#### Before
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
 
 ##### After
 
-#### Option 3: ChatGPT
+![](`r here::here("Week 3 Reporting Findings", "Images", "after3.png")`)
 
-##### Before
+![](`r here::here("Week 3 Reporting Findings", "Images", "chat_notes.png")`)
 
-##### After
+## **Take Home**
 
-# Let's Recreate a Figure!
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
-
-## Gantt Charts
+# Recreating a Figure : Gantt Chart
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
 
-### History
+## History
 
 https://en.wikipedia.org/wiki/Gantt_chart
 
-### Great for Project Management
+## Great for Project Management
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Gantt-chart.webp")`)
 
-### ggplot2 Lessons
+## ggplot2 Lessons
 
 #### Layering a graph with two different dataframes
 

@@ -93,9 +93,9 @@ Today's code (**this html file**) will be posted to the SCORE website (https://u
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
 
 ## Music and Memes
-## Coding Crumbs : R styling
-## Recreating a Figure : Gantt Chart
-## Main Theme: Best Practices for Reporting Data
+## Coding Crumbs: **R styling**
+## Recreating a Figure: **Gantt Chart**
+## Main Theme: **Best Practices for Reporting Data**
 
 # Music and Memes
 
@@ -111,13 +111,15 @@ https://open.spotify.com/track/1mCvM05OlYWQd77RDxCTLD?si=7d8beb22c2274997
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "meme2.jpg")`)
 
-#  Coding Crumbs : R styling
+#  Coding Crumbs: **R styling**
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
 
+## And I **LOVE** clean code
+
 ## Confession: **I write ugly code**
 
-## And I **LOVE** clean code
+## There is **Help**
 
 ## Clean legible code is important for reproducibility
 
@@ -125,7 +127,7 @@ https://open.spotify.com/track/1mCvM05OlYWQd77RDxCTLD?si=7d8beb22c2274997
 
 http://adv-r.had.co.nz/Style.html
 
-## There is **Help**
+
 
 ### Option 1: **Native R**
 
@@ -134,6 +136,8 @@ http://adv-r.had.co.nz/Style.html
 #### Before
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "native_click.png")`)
 
 #### After
 
@@ -155,6 +159,9 @@ https://www.youtube.com/watch?app=desktop&v=yUA3NpJLH6I&t=220s&t=156
 
 #### After
 
+![](`r here::here("Week 3 Reporting Findings", "Images", "styler_click.png")`)
+
+
 ![](`r here::here("Week 3 Reporting Findings", "Images", "after2.png")`)
 
 ### Option 3: **ChatGPT**
@@ -173,90 +180,126 @@ https://www.youtube.com/watch?app=desktop&v=yUA3NpJLH6I&t=220s&t=156
 
 ## **Take Home**
 
-# Recreating a Figure : Gantt Chart
+### **Styling** your code is important
+### But spend your time **thinking about the logic** of your code
+### **Styler** is a great tool to help with minimal effort
+### **ChatGPT** is also a great tool to help
+### I'm going to try to run my code through **chatGPT** before publishing it
+
+# Recreating a Figure: **Gantt Chart**
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
 
+## Final Product!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
+
 ## History
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt.png")`)
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_history.png")`)
 
 https://en.wikipedia.org/wiki/Gantt_chart
 
 ## Great for Project Management
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "Gantt-chart.webp")`)
+![](`r here::here("Week 3 Reporting Findings", "Images", "GanttChartAnatomy.svg.png")`)
 
-## ggplot2 Lessons
+## ggplot2 Lessons for Me
 
-#### Layering a graph with two different dataframes
+### **Layering** a graph with two different dataframes
+### **Leveling** a graph with data from two different dataframes
+### **Setting** a color palette
 
+## Starting Place
 
-```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10, fig.height=5}
+I wanted to **start with one csv file** that was flexible to fill out.
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "mentor_csv.png")`)
+
+## Load Data, Define Institutes vs. Individuals, and Pivot Longer
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code1.png")`)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "pivot.png")`)
+
+## Create Institutions Dataframe, Define the Order of Graph + Legend, and Set the Color Palette
+### **Note:** Set the **same factor** on two different dataframes
+### **Note:** I asked **ChatGPT** to help me select the color palette
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code2.png")`)
+
+## ggplot2 code
+### **Note:** geom_segment() **AND** geom_line()
+### **Note:** labs(color = "") sets the legend title
+### **Note:** scale_y_discrete() sets the order of mentors
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code3.png")`)
+
+## **Code** to produce the **Gantt chart**
+### Yes, **I asked chatGPT** to clean up and annotate the code!
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+# Load data
 df <- read.csv(here("Week 3 Reporting Findings", "data", "JWNMentors.csv"))
 
-df2 <- df %>%
-  filter(Mentor %in% c(
-    "University of Washington",
-    "Oregon Health & Science University",
-    "University of Southern California"
-  ))
+# Define institution list
+institutions <- c(
+  "University of Washington",
+  "Oregon Health & Science University",
+  "University of Southern California"
+)
 
-df3 <- df %>%
-  filter(!Mentor %in% c(
-    "University of Washington",
-    "Oregon Health & Science University",
-    "University of Southern California"
-  ))
+# Categorize mentors
+df <- df %>%
+  mutate(
+    MentorType = ifelse(Mentor %in% institutions, "Institution", "Individual")
+  )
 
-g.gantt <- gather(df2, "state", "date", 3:4) %>% mutate(date = as.Date(date, "%m/%d/%Y"))
+# Reshape data
+g.gantt <- df %>%
+  pivot_longer(cols = 3:4, names_to = "state", values_to = "date") %>%
+  mutate(date = as.Date(date, "%m/%d/%Y"))
 
-g.gantt2 <- gather(df3, "state", "date", 3:4) %>% mutate(date = as.Date(date, "%m/%d/%Y"))
-
-# Combine the start and end into a single timeline for each Stage
+# Create summarized timeline for institutions
 g.gantt_combined <- g.gantt %>%
-  arrange(Stage, date) %>%
+  filter(MentorType == "Institution") %>%
   group_by(Stage) %>%
   summarise(
     start_date = min(date[state == "Start"]),
     end_date = max(date[state == "End"]),
-    Mentor = "Institution" # Set as a constant value to show as a single row
+    Mentor = "Institution"
   ) %>%
   ungroup()
 
-g.gantt$Stage <- factor(g.gantt$Stage, levels = c("University of Washington", "Oregon Health & Science University", "University of Southern California", "Undergraduate", "Graduate School", "Postdoc", "Junior Faculty"))
-
-
-# Set the factor levels for the 'Stage' variable
-g.gantt_combined$Stage <- factor(g.gantt_combined$Stage,
-  levels = c(
-    "University of Washington",
-    "Oregon Health & Science University",
-    "University of Southern California",
-    "Undergraduate",
-    "Graduate School",
-    "Postdoc",
-    "Junior Faculty"
-  )
+# Define factor levels for Stage
+stage_levels <- c(
+  "University of Washington",
+  "Oregon Health & Science University",
+  "University of Southern California",
+  "Undergraduate",
+  "Graduate School",
+  "Postdoc",
+  "Junior Faculty"
 )
 
-g.gantt2$Stage <- factor(g.gantt2$Stage,
-  levels = c(
-    "University of Washington",
-    "Oregon Health & Science University",
-    "University of Southern California",
-    "Undergraduate",
-    "Graduate School",
-    "Postdoc",
-    "Junior Faculty"
-  )
-)
+g.gantt$Stage <- factor(g.gantt$Stage, levels = stage_levels)
+g.gantt_combined$Stage <- factor(g.gantt_combined$Stage, levels = stage_levels)
 
+# Define y-axis order
 desired_order <- rev(c(
   "Institution", "Staffan Bench", "Benjamin Hall", "Nabil Alkayed",
   "Paul Barnes", "Sanjiv Kaul", "David Ellison",
   "Susan Gurley", "Janos Peti-Peterdi"
 ))
 
-
+# Define color mapping
 desired_colors <- c(
   "University of Washington" = "#32006e",
   "Oregon Health & Science University" = "#575e60",
@@ -267,33 +310,36 @@ desired_colors <- c(
   "Junior Faculty" = "#B47E83"
 )
 
+# Create plot
 ggplot() +
-  # Plot the segments (timeline for each project) from the first dataframe
   geom_segment(
     data = g.gantt_combined,
     aes(x = start_date, xend = end_date, y = Mentor, yend = Mentor, color = Stage),
     size = 10
   ) +
-  # Plot the lines (from the second dataframe)
-  geom_line(data = g.gantt2, aes(x = date, y = Mentor, color = Stage), size = 10) +
+  geom_line(
+    data = g.gantt,
+    aes(x = date, y = Mentor, color = Stage),
+    size = 10
+  ) +
   labs(x = "Year", y = NULL, title = "Mentors", color = "Institution and Career Stage") +
   theme_minimal(base_size = 15) +
-  scale_y_discrete(limits = desired_order) + # Control y-axis order
+  scale_y_discrete(limits = desired_order) +
   theme(
     panel.grid = element_blank(),
-    plot.title = element_text(hjust = 0.5, size = 18), # Centered title with larger font
+    plot.title = element_text(hjust = 0.5, size = 18),
     axis.title = element_text(size = 16),
-    legend.title = element_text(size = 16, face = "bold"), # Set legend title size and style
+    legend.title = element_text(size = 16, face = "bold"),
     legend.text = element_text(size = 16),
-    axis.text = element_text(size = 14), # Axis labels and ticks
-    axis.ticks.y = element_blank(), # Remove ticks on y-axis
-    axis.line.y = element_blank() # Remove the y-axis line
+    axis.text = element_text(size = 14),
+    axis.ticks.y = element_blank(),
+    axis.line.y = element_blank()
   ) +
   scale_color_manual(values = desired_colors, na.value = "gray")
 
 ```
 
-
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
 
 # Main Theme
 

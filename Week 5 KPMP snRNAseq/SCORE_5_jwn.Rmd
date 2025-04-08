@@ -53,6 +53,8 @@ set.seed(12345)
 ```
 # Welcome
 
+# Xiao-Tong is an amazing scientist
+
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
 
 Welcome to the **Single-Cell Omics Research and Education Club**!

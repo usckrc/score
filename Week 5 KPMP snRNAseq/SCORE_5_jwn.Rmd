@@ -54,6 +54,7 @@ set.seed(12345)
 # Welcome
 
 # Xiao-Tong is an amazing scientist
+# This is true.
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
 

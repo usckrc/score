@@ -155,7 +155,7 @@ df_human <- mousegnameConverter(df_mouse, "gene")
 
 ### **ChatGPT**
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "chatGPT.png")`)
 
 #### Use at your own risk.
 ##### Quick...but unreliable
@@ -209,7 +209,7 @@ convert_mouse_to_human <- function(gene_list) {
      return (output)
 }
 
-df_human_gene <- convert_mouse_to_human (gene_list)
+df_human_gene <- convert_mouse_to_human(gene_list)
 
 df_human_gene <- as.data.frame(df_human_gene)
 
@@ -254,10 +254,10 @@ sankey_final.png
 
 ## History
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt.png")`)
-![](`r here::here("Week 4 CellChat", "Images", "W4", "250px-Sankey_Captain_H_Riall.jpg")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_wiki.png")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_wiki2.png")`)
 
-https://en.wikipedia.org/wiki/Sankey_diagram
+[**Sankey Wiki**](https://en.wikipedia.org/wiki/Sankey_diagram)
 
 ## Great for Project Management
 
@@ -273,7 +273,13 @@ https://en.wikipedia.org/wiki/Sankey_diagram
 
 I wanted to **start with easy .xlsx file** that was flexible to fill out.
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "mentor_csv.png")`)
+### Research Input
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_xlsx1.png")`)
+
+### Research Output
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_xlsx2.png")`)
 
 ## Load Data, Define Institutes vs. Individuals, and Pivot Longer
 
@@ -296,6 +302,23 @@ I wanted to **start with easy .xlsx file** that was flexible to fill out.
 
 ## **Code** to produce the **Gantt chart**
 ### Yes, **I asked chatGPT** to clean up and annotate the code!
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+if (!require("here")) {install.packages("here"); require("here")}
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")}
+if (!require("plotly")) {install.packages("plotly"); require("plotly")}
+library(tidyr)
+
+#remotes::install_github("davidsjoberg/ggsankey")
+library(ggsankey)
+
+
+df <- read.xlsx(here("Week 4 CellChat", "data", "Revenue Input.xlsx"))
+
+df
+
+```
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 

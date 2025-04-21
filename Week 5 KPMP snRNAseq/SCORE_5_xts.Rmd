@@ -1,0 +1,616 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #3: Reporting Data"
+author: "Jonathan Nelson and Jessica Bahena-Lopez"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+library("styler") #tidy up data
+
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+# install.packages("styler")
+
+
+
+set.seed(12345)
+# here()
+
+```
+# Welcome
+
+# Xiao-Tong is an amazing scientist
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
+
+Welcome to the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Context and Expectations
+
+I know a lot of this has been going on in the background for everyeone and I wanted to bring it to the forefront. **My expectation** is that we have **about 6 of these meetings** together and then we can re-evaluate if we want to continue as a group or not.
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
+
+# The Agenda!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
+
+## Music and Memes
+## Coding Crumbs: **R styling**
+## Recreating a Figure: **Gantt Chart**
+## Main Theme: **Best Practices for Reporting Data**
+
+# Music and Memes
+
+## This Months Coding Music
+
+**LAUREL**: Life Worth Living 
+
+https://open.spotify.com/track/1mCvM05OlYWQd77RDxCTLD?si=7d8beb22c2274997
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "life_worth_living.jpg")`)
+
+## The Memes!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "meme2.jpg")`)
+
+#  Coding Crumbs: **R styling**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
+
+## And I **LOVE** clean code
+
+## Confession: **I write ugly code**
+
+## There is **Help**
+
+## Clean legible code is important for reproducibility
+
+### Hadley Wickham's Style Guide
+
+http://adv-r.had.co.nz/Style.html
+
+
+
+### Option 1: **Native R**
+
+### Code > Reformat Code (**Ctrl+Shift+A**)
+
+#### Before
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "native_click.png")`)
+
+#### After
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "after1.png")`)
+
+### Option 2: **Styler Package**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "styler_logo.png")`)
+
+https://github.com/r-lib/styler?tab=readme-ov-file
+
+install.packages("styler")
+
+https://www.youtube.com/watch?app=desktop&v=yUA3NpJLH6I&t=220s&t=156
+
+#### Before
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
+
+#### After
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "styler_click.png")`)
+
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "after2.png")`)
+
+### Option 3: **ChatGPT**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "chat_prompt.png")`)
+
+#### Before
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "before.png")`)
+
+##### After
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "after3.png")`)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "chat_notes.png")`)
+
+## **Take Home**
+
+### **Styling** your code is important
+### But spend your time **thinking about the logic** of your code
+### **Styler** is a great tool to help with minimal effort
+### **ChatGPT** is also a great tool to help
+### I'm going to try to run my code through **chatGPT** before publishing it
+
+# Recreating a Figure: **Gantt Chart**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
+
+## Final Product!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
+
+## History
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt.png")`)
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_history.png")`)
+
+https://en.wikipedia.org/wiki/Gantt_chart
+
+## Great for Project Management
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "GanttChartAnatomy.svg.png")`)
+
+## ggplot2 Lessons for Me
+
+### **Layering** a graph with two different dataframes
+### **Leveling** a graph with data from two different dataframes
+### **Setting** a color palette
+
+## Starting Place
+
+I wanted to **start with one csv file** that was flexible to fill out.
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "mentor_csv.png")`)
+
+## Load Data, Define Institutes vs. Individuals, and Pivot Longer
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code1.png")`)
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "pivot.png")`)
+
+## Create Institutions Dataframe, Define the Order of Graph + Legend, and Set the Color Palette
+### **Note:** Set the **same factor** on two different dataframes
+### **Note:** I asked **ChatGPT** to help me select the color palette
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code2.png")`)
+
+## ggplot2 code
+### **Note:** geom_segment() **AND** geom_line()
+### **Note:** labs(color = "") sets the legend title
+### **Note:** scale_y_discrete() sets the order of mentors
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code3.png")`)
+
+## **Code** to produce the **Gantt chart**
+### Yes, **I asked chatGPT** to clean up and annotate the code!
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+# Load data
+df <- read.csv(here("Week 3 Reporting Findings", "data", "JWNMentors.csv"))
+
+# Define institution list
+institutions <- c(
+  "University of Washington",
+  "Oregon Health & Science University",
+  "University of Southern California"
+)
+
+# Categorize mentors
+df <- df %>%
+  mutate(
+    MentorType = ifelse(Mentor %in% institutions, "Institution", "Individual")
+  )
+
+# Reshape data
+g.gantt <- df %>%
+  pivot_longer(cols = 3:4, names_to = "state", values_to = "date") %>%
+  mutate(date = as.Date(date, "%m/%d/%Y"))
+
+# Create summarized timeline for institutions
+g.gantt_combined <- g.gantt %>%
+  filter(MentorType == "Institution") %>%
+  group_by(Stage) %>%
+  summarise(
+    start_date = min(date[state == "Start"]),
+    end_date = max(date[state == "End"]),
+    Mentor = "Institution"
+  ) %>%
+  ungroup()
+
+# Define factor levels for Stage
+stage_levels <- c(
+  "University of Washington",
+  "Oregon Health & Science University",
+  "University of Southern California",
+  "Undergraduate",
+  "Graduate School",
+  "Postdoc",
+  "Junior Faculty"
+)
+
+g.gantt$Stage <- factor(g.gantt$Stage, levels = stage_levels)
+g.gantt_combined$Stage <- factor(g.gantt_combined$Stage, levels = stage_levels)
+
+# Define y-axis order
+desired_order <- rev(c(
+  "Institution", "Staffan Bench", "Benjamin Hall", "Nabil Alkayed",
+  "Paul Barnes", "Sanjiv Kaul", "David Ellison",
+  "Susan Gurley", "Janos Peti-Peterdi"
+))
+
+# Define color mapping
+desired_colors <- c(
+  "University of Washington" = "#32006e",
+  "Oregon Health & Science University" = "#575e60",
+  "University of Southern California" = "#990000",
+  "Undergraduate" = "#C5692E",
+  "Graduate School" = "#FEB359",
+  "Postdoc" = "#435F90",
+  "Junior Faculty" = "#B47E83"
+)
+
+# Create plot
+ggplot() +
+  geom_segment(
+    data = g.gantt_combined,
+    aes(x = start_date, xend = end_date, y = Mentor, yend = Mentor, color = Stage),
+    size = 10
+  ) +
+  geom_line(
+    data = g.gantt,
+    aes(x = date, y = Mentor, color = Stage),
+    size = 10
+  ) +
+  labs(x = "Year", y = NULL, title = "Mentors", color = "Institution and Career Stage") +
+  theme_minimal(base_size = 15) +
+  scale_y_discrete(limits = desired_order) +
+  theme(
+    panel.grid = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 18),
+    axis.title = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    axis.ticks.y = element_blank(),
+    axis.line.y = element_blank()
+  ) +
+  scale_color_manual(values = desired_colors, na.value = "gray")
+
+```
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
+
+# Main Theme: **Reporting Data**
+
+## Best Practices for Reporting Data for Manuscripts<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_001.png")`)<br>
+
+## Pipeline<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_002.png")`)<br>
+
+### Raw Sequencing Files (FASTQ)<br>
+- Raw output from sequencers (e.g., NovaSeq, NextSeq)<br>
+- In sc/snRNA-seq: short reads from cDNA (reverse-transcribed mRNA)<br>
+
+#### Main files<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_003.png")`)<br>
+<br>
+
+- FASTQ files are large → compressed with `.gz` to save space<br>
+- Next: processed by pipelines like Cell Ranger, STARsolo,(bulk RNA-seq) or Kallisto|Bustools (pseudoalignment), etc.<br>
+
+
+### Preprocessing Files (via Cell Ranger, etc.)<br>
+
+- FASTQ files → processed with pipelines (e.g., Cell Ranger)<br>
+- Tasks: demultiplex barcodes, deduplicate UMIs, align reads, build gene × cell matrix<br>
+<img src="`r here::here('Week 3 Reporting Findings', 'Images', 'IMG_004.png')`" width="200"/>
+
+#### Output folder structure (Cell Ranger)<br>
+Cell Ranger generates several files and folders after processing single-cell RNA-seq data. The key outputs are:<br>
+https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-gex-overview<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_003.1.png")`)<br>
+
+
+Outputs compatible with Seurat, Scanpy, IGV, and downstream tools<br>
+Can be used with CellBender, Alevin, or custom workflows<br>
+<br>
+<br>
+**A) Filtered Feature Matrix (typically under outs/filtered_feature_bc_matrix/):**<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_005.png")`)<br>
+<br>
+Output file format: Which one should you use? MEX vs HDF5 (.h5)?<br>
+Both formats contain the same information:<br>
+A gene × cell expression matrix, with barcodes and features.<br>
+The difference is in the file structure and format:<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_006.png")`)<br>
+<br>
+<br>
+
+**B) raw_feature_bc_matrix/**<br>
+- Same structure as filtered_feature_bc_matrix, but:<br>
+- Includes all barcodes, even: Empty droplets, Damaged cells, Low-quality barcodes<br>
+<br>
+Why is it useful?<br>
+Re-analyze using your own custom filtering, Identify ambient RNA contamination<br>
+<br>
+<br>
+
+**C) QC and Summary Reports:**<br>
+- web_summary.html: Interactive summary with plots (genes per cell, mitochondrial %, etc.)<br>
+  An interactive report viewable in any browser. Shows:<br>
+  - Total number of estimated cells<br>
+  - Reads per cell<br>
+  - Median genes per cell<br>
+  - % mitochondrial gene expression<br>
+  - Sequencing saturation<br>
+  - Clustering preview (if applicable)<br>
+  - Useful for checking: If the run worked, How deep was the sequencing, General quality of data (need it for publishing)<br>
+- metrics_summary.csv: Tabular summary of sequencing and mapping statistics<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_007.png")`)<br>
+<br>
+<img src="`r here::here('Week 3 Reporting Findings', 'Images', 'IMG_008.png')`" width="500"/>
+<br>
+<br>
+**D) BAM (Binary Alignment/Map) Files:**  possorted_genome_bam.bam and .bam.bai<br>
+- BAM files = aligned reads in binary format<br>
+- `possorted_genome_bam.bam`: aligned + unassigned reads (incl. Feature Barcode libs)<br>
+- `unassigned_alignments.bam` / `sample_alignments.bam`: unassigned vs. assigned reads<br>
+- Use: troubleshoot, reconvert to FASTQ, explore in IGV (includes barcodes)<br>
+<br>
+<br>
+**E) cloupe.cloupe:**<br>
+- `.cloupe`: binary file for Loupe Cell Browser (by 10X Genomics)<br>
+- Allows: cluster exploration, gene expression per cluster, manual annotation, marker analysis<br>
+- Optional, but useful for biologists and presentations<br>
+[More info](https://www.10xgenomics.com/support/software/loupe-browser/latest)<br>
+<br>
+
+
+### Downstream Analysis (Seurat, etc.)<br>
+Processed Data Formats:<br>
+- .rds (Seurat): Includes count matrix, metadata, UMAP, clusters<br>
+- .h5ad (Scanpy): Same as above but in Python format<br>
+- metadata.csv: Per-cell information (cluster, % mito, etc.)<br>
+- degs.csv: Differentially expressed genes between clusters or conditions<br>
+- umap.png, violin_plot.png: Visual outputs from analysis<br>
+
+
+### Optional(?) Files & Documentation for Project SharingOptional Files 
+These files help others understand, run, and reproduce your project (on GitHub or similar platforms).<br>
+<br>
+
+#### Projects should include additional files to support:<br>
+- Data Sharing: Make your datasets accessible (e.g., via GEO or public repositories).<br>
+- Reproducibility: Include scripts and environment files to allow others to rerun your analysis exactly.<br>
+- Collaboration: Clear documentation helps others understand and contribute to your project.<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_010.png")`)<br>
+
+
+## Data: GEO (Gene Expression Omnibus) – Public data sharing platform for genomics<br>
+
+### What is GEO?<br>
+GEO is a public repository managed by the NCBI (National Center for Biotechnology Information).<br>
+It's used to store and share high-throughput gene expression data, including:<br>
+- Microarray<br>
+- Bulk RNA-seq<br>
+- Single-cell/snRNA-seq<br>
+- Multi-modal (CITE-seq, spatial transcriptomics)<br>
+<br>
+
+- Journals often require data in public archives like GEO<br>
+- GEO ensures compliance, reproducibility, sharing, and reuse<br>
+
+
+### What’s included in a typical GEO submission?<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.png")`)<br>
+<br>
+
+### Submitting a Dataset to GEO
+
+**Steps:**
+1. Create `Meta.data` sheet  
+2. Organize files and get MD5 checksums:  
+   &nbsp;&nbsp;&nbsp;&nbsp;• FASTQ, matrix, `.rds`  
+3. Upload files via NCBI account  
+4. Add GEO link and reviewer token to Methods section in your manuscript  
+
+**Timeline:**
+- 🕒 1–3 days: File preparation  
+- 1–2 days: File upload (slow: ~2–4 MB/s)  
+- 1–2 days: GEO QC & processing  
+
+> *Tip:* GEO staff is very helpful—especially if you make a mistake!
+
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.1.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.2.png")`)<br>
+
+#### **Files** to **Download**
+
+[**2025** Template Submission file from GEO](https://docs.google.com/spreadsheets/d/1CoMp-hg8-DwjmQ6T6QPri0rnnx5gOCvL/edit?usp=sharing&ouid=100835342690409949441&rtpof=true&sd=true) <br>
+
+[Filled out **example** of the GEO submission file](https://docs.google.com/spreadsheets/d/1nmgVc4ADKIYqjepmkCkCMIxX-xBNiiif/edit?usp=sharing&ouid=100835342690409949441&rtpof=true&sd=true)
+
+#### Set a release date<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.3.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_019.png")`)<br>
+
+### Where to find GEO in papers?<br>
+https://www.ncbi.nlm.nih.gov/geo/<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_012.png")`)<br>
+
+### **GEO Structure: The 3 layers**<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_014.png")`)<br>
+<br>
+<br>
+
+#### .tar files
+A .tar file is an archive format that bundles multiple files and folders into a single file, without compressing them.<br>
+Think of it like un ZIP file, but without compresión por defecto.<br>
+Very common in Linux/Unix systems and in bioinformática para packaging datasets.<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_015.png")`)<br>
+
+#### .rds files
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_016.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_017.png")`)<br>
+<br>
+
+
+## Sharing Code <br>
+### GitHub – Code, documentation, and collaboration platform<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_020.png")`)<br>
+
+### What is GitHub?<br>
+GitHub is a version-controlled code hosting platform.<br>
+It’s perfect for managing your analysis scripts, notebooks, and documentation.<br>
+It’s built on Git, which allows you to track every change you make to a file.<br>
+Use GitHub Releases to tag versions (e.g., "v1.0 – preprint version")<br>
+Add a LICENSE (Reference) file to clarify how others can use your code<br>
+Add badges (optional) to show R/Python versions, citation info, etc.<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_021.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_022.png")`)<br>
+<br>
+### "Typical" GitHub Repo Structure for Single-Cell Analysis<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_023.png")`)<br>
+
+
+
+### https://github.com/OHSU-NHT/Su_dct_2023<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_024.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_025.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_026.png")`)<br>
+
+
+## Shiny App<br>
+
+### What is a Shiny App?<br>
+A Shiny App is an interactive web application built using the R programming language. It allows you to turn your R scripts, data visualizations, and statistical models into una interfaz web, sin necesidad de escribir HTML, JavaScript o CSS.<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.1.png")`)
+
+### Why is it useful in single-cell/snRNA-seq analysis?
+
+A Shiny App lets scientists, clinicians, and collaborators (even without coding skills):  
+- Explore clusters and cell types  
+- Visualize marker gene expression  
+- Interact with UMAP or t-SNE plots  
+- Compare experimental conditions  
+- Download plots or data tables  
+
+It transforms static results into an interactive data exploration tool.
+
+### How does it work?
+
+- Perform your analysis in R (e.g., using Seurat)  
+- Build the interface and logic using the `shiny` package  
+- The app runs as a web page—no coding required for end users  
+
+https://ellisonlab.shinyapps.io/dct_shinycell/<br>
+https://ellisonlab.shinyapps.io/tal_shinycell/<br>
+<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.2.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.3.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.4.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.5.png")`)<br>
+![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.6.png")`)<br>
+
+## Thank you for your attention!!<br>
+
+
+# Closing Remarks
+
+I hope that you found this session helpful.
+
+## Would anyone else like to **share their experience with reporting omics data**?
+
+## Questions?
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Questions.png")`)
+
+## Community Questions
+
+Do you have a **coding problem** that you'd like some support on? <br>
+Do you have a **topic** you'd like covered at a future meeting?
+
+Email me: **j.nelson@med.usc.edu**
+
+## Upcoming Schedule
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

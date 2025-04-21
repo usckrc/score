@@ -141,40 +141,116 @@ https://github.com/mustafapir/geneName
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
+if (!require("geneName")) {install.packages("geneName"); require("geneName")}
 
 ```
 
+#### Usage
 
-####
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df_human <- mousegnameConverter(df_mouse, "gene")
+
+```
 
 ### **ChatGPT**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
 
 #### Use at your own risk.
 ##### Quick...but unreliable
 
 ### **Functions**
 
+#### Human -> Mouse
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+convert_human_to_mouse <- function(gene_list) {
+    output = c()
+    mouse_human_genes = read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
+
+    for(gene in gene_list) {
+          class_key = (mouse_human_genes %>% filter(Symbol == gene & Common.Organism.Name == "human"))[['DB.Class.Key']]
+          if( !identical(class_key, integer(0)) ) {
+            human_genes = (mouse_human_genes %>% filter(DB.Class.Key == class_key & Common.Organism.Name=="mouse, laboratory"))[,"Symbol"]
+            for(human_gene in human_genes) {
+                output = rbind(c(gene, human_gene), output)
+            }
+          }
+     }
+     return (output)
+}
+
+df_mouse_gene <- convert_human_to_mouse(gene_list)
+
+df_mouse_gene <- as.data.frame(df_mouse_gene)
+
+
+```
+
+#### Mouse -> Human
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+convert_mouse_to_human <- function(gene_list) { 
+     output = c()
+     mouse_human_genes = read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
+
+     for(gene in gene_list) {
+          class_key = (mouse_human_genes %>% filter(Symbol == gene & Common.Organism.Name == "mouse, laboratory"))[['DB.Class.Key']]
+          if( !identical(class_key, integer(0)) ) {
+               human_genes = (mouse_human_genes %>% filter(DB.Class.Key == class_key & Common.Organism.Name=="human"))[,"Symbol"]
+               for(human_gene in human_genes) {
+                    output = rbind(c(gene, human_gene), output)
+               }
+          }
+     }
+     return (output)
+}
+
+df_human_gene <- convert_mouse_to_human (gene_list)
+
+df_human_gene <- as.data.frame(df_human_gene)
+
+```
 
 ## **Take Home**
 
 ### **Function** is what I use now. 
-### I suspect there are other options
+#### I should probably **download the database** localy onto my computer
+### I suspect there are **other options**.
 #### BioMart?
-
-### But spend your time **thinking about the logic** of your code
-### **Styler** is a great tool to help with minimal effort
-### **ChatGPT** is also a great tool to help
-### I'm going to try to run my code through **chatGPT** before publishing it
-
-
+#### How do others in the **chat** do this?
 
 # Recreating a Figure: **Sankey Plot**
+
+sankey_final.png
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
 
 ## Final Product!
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_final.png")`)
+
+
+## Inspiration
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "airplane_sankey.jpg")`)
+
+[**Source**](https://www.linkedin.com/posts/lirimzenuni-bi-king_sankey-pl-for-the-most-profitable-10-hour-activity-7213840792409272320-nwO1)
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "professor_sankey.jpg")`)
+
+[**Source**](https://academia.stackexchange.com/questions/17431/what-ratio-of-phd-graduates-in-stem-fields-ultimately-end-up-as-tenured-profes)
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "job_sankey.webp")`)
+
+[**Source**](https://www.reddit.com/r/math/comments/ccd9sl/my_job_hunt_as_a_new_phd/)
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "job_sankey2.png")`)
+
+[**Source**](https://www.reddit.com/r/academia/comments/16lyfx3/3_year_faculty_application_journey_in_sankey/)
 
 ## History
 
@@ -323,258 +399,8 @@ ggplot() +
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
 
-# Main Theme: **Reporting Data**
+# Main Theme: **CellChat**
 
-## Best Practices for Reporting Data for Manuscripts<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_001.png")`)<br>
-
-## Pipeline<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_002.png")`)<br>
-
-### Raw Sequencing Files (FASTQ)<br>
-- Raw output from sequencers (e.g., NovaSeq, NextSeq)<br>
-- In sc/snRNA-seq: short reads from cDNA (reverse-transcribed mRNA)<br>
-
-#### Main files<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_003.png")`)<br>
-<br>
-
-- FASTQ files are large → compressed with `.gz` to save space<br>
-- Next: processed by pipelines like Cell Ranger, STARsolo,(bulk RNA-seq) or Kallisto|Bustools (pseudoalignment), etc.<br>
-
-
-### Preprocessing Files (via Cell Ranger, etc.)<br>
-
-- FASTQ files → processed with pipelines (e.g., Cell Ranger)<br>
-- Tasks: demultiplex barcodes, deduplicate UMIs, align reads, build gene × cell matrix<br>
-<img src="`r here::here('Week 3 Reporting Findings', 'Images', 'IMG_004.png')`" width="200"/>
-
-#### Output folder structure (Cell Ranger)<br>
-Cell Ranger generates several files and folders after processing single-cell RNA-seq data. The key outputs are:<br>
-https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-gex-overview<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_003.1.png")`)<br>
-
-
-Outputs compatible with Seurat, Scanpy, IGV, and downstream tools<br>
-Can be used with CellBender, Alevin, or custom workflows<br>
-<br>
-<br>
-**A) Filtered Feature Matrix (typically under outs/filtered_feature_bc_matrix/):**<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_005.png")`)<br>
-<br>
-Output file format: Which one should you use? MEX vs HDF5 (.h5)?<br>
-Both formats contain the same information:<br>
-A gene × cell expression matrix, with barcodes and features.<br>
-The difference is in the file structure and format:<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_006.png")`)<br>
-<br>
-<br>
-
-**B) raw_feature_bc_matrix/**<br>
-- Same structure as filtered_feature_bc_matrix, but:<br>
-- Includes all barcodes, even: Empty droplets, Damaged cells, Low-quality barcodes<br>
-<br>
-Why is it useful?<br>
-Re-analyze using your own custom filtering, Identify ambient RNA contamination<br>
-<br>
-<br>
-
-**C) QC and Summary Reports:**<br>
-- web_summary.html: Interactive summary with plots (genes per cell, mitochondrial %, etc.)<br>
-  An interactive report viewable in any browser. Shows:<br>
-  - Total number of estimated cells<br>
-  - Reads per cell<br>
-  - Median genes per cell<br>
-  - % mitochondrial gene expression<br>
-  - Sequencing saturation<br>
-  - Clustering preview (if applicable)<br>
-  - Useful for checking: If the run worked, How deep was the sequencing, General quality of data (need it for publishing)<br>
-- metrics_summary.csv: Tabular summary of sequencing and mapping statistics<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_007.png")`)<br>
-<br>
-<img src="`r here::here('Week 3 Reporting Findings', 'Images', 'IMG_008.png')`" width="500"/>
-<br>
-<br>
-**D) BAM (Binary Alignment/Map) Files:**  possorted_genome_bam.bam and .bam.bai<br>
-- BAM files = aligned reads in binary format<br>
-- `possorted_genome_bam.bam`: aligned + unassigned reads (incl. Feature Barcode libs)<br>
-- `unassigned_alignments.bam` / `sample_alignments.bam`: unassigned vs. assigned reads<br>
-- Use: troubleshoot, reconvert to FASTQ, explore in IGV (includes barcodes)<br>
-<br>
-<br>
-**E) cloupe.cloupe:**<br>
-- `.cloupe`: binary file for Loupe Cell Browser (by 10X Genomics)<br>
-- Allows: cluster exploration, gene expression per cluster, manual annotation, marker analysis<br>
-- Optional, but useful for biologists and presentations<br>
-[More info](https://www.10xgenomics.com/support/software/loupe-browser/latest)<br>
-<br>
-
-
-### Downstream Analysis (Seurat, etc.)<br>
-Processed Data Formats:<br>
-- .rds (Seurat): Includes count matrix, metadata, UMAP, clusters<br>
-- .h5ad (Scanpy): Same as above but in Python format<br>
-- metadata.csv: Per-cell information (cluster, % mito, etc.)<br>
-- degs.csv: Differentially expressed genes between clusters or conditions<br>
-- umap.png, violin_plot.png: Visual outputs from analysis<br>
-
-
-### Optional(?) Files & Documentation for Project SharingOptional Files 
-These files help others understand, run, and reproduce your project (on GitHub or similar platforms).<br>
-<br>
-
-#### Projects should include additional files to support:<br>
-- Data Sharing: Make your datasets accessible (e.g., via GEO or public repositories).<br>
-- Reproducibility: Include scripts and environment files to allow others to rerun your analysis exactly.<br>
-- Collaboration: Clear documentation helps others understand and contribute to your project.<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_010.png")`)<br>
-
-
-## Data: GEO (Gene Expression Omnibus) – Public data sharing platform for genomics<br>
-
-### What is GEO?<br>
-GEO is a public repository managed by the NCBI (National Center for Biotechnology Information).<br>
-It's used to store and share high-throughput gene expression data, including:<br>
-- Microarray<br>
-- Bulk RNA-seq<br>
-- Single-cell/snRNA-seq<br>
-- Multi-modal (CITE-seq, spatial transcriptomics)<br>
-<br>
-
-- Journals often require data in public archives like GEO<br>
-- GEO ensures compliance, reproducibility, sharing, and reuse<br>
-
-
-### What’s included in a typical GEO submission?<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.png")`)<br>
-<br>
-
-### Submitting a Dataset to GEO
-
-**Steps:**
-1. Create `Meta.data` sheet  
-2. Organize files and get MD5 checksums:  
-   &nbsp;&nbsp;&nbsp;&nbsp;• FASTQ, matrix, `.rds`  
-3. Upload files via NCBI account  
-4. Add GEO link and reviewer token to Methods section in your manuscript  
-
-**Timeline:**
-- 🕒 1–3 days: File preparation  
-- 1–2 days: File upload (slow: ~2–4 MB/s)  
-- 1–2 days: GEO QC & processing  
-
-> *Tip:* GEO staff is very helpful—especially if you make a mistake!
-
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.1.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.2.png")`)<br>
-
-#### **Files** to **Download**
-
-[**2025** Template Submission file from GEO](https://docs.google.com/spreadsheets/d/1CoMp-hg8-DwjmQ6T6QPri0rnnx5gOCvL/edit?usp=sharing&ouid=100835342690409949441&rtpof=true&sd=true) <br>
-
-[Filled out **example** of the GEO submission file](https://docs.google.com/spreadsheets/d/1nmgVc4ADKIYqjepmkCkCMIxX-xBNiiif/edit?usp=sharing&ouid=100835342690409949441&rtpof=true&sd=true)
-
-#### Set a release date<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_011.3.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_019.png")`)<br>
-
-### Where to find GEO in papers?<br>
-https://www.ncbi.nlm.nih.gov/geo/<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_012.png")`)<br>
-
-### **GEO Structure: The 3 layers**<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_014.png")`)<br>
-<br>
-<br>
-
-#### .tar files
-A .tar file is an archive format that bundles multiple files and folders into a single file, without compressing them.<br>
-Think of it like un ZIP file, but without compresión por defecto.<br>
-Very common in Linux/Unix systems and in bioinformática para packaging datasets.<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_015.png")`)<br>
-
-#### .rds files
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_016.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_017.png")`)<br>
-<br>
-
-
-## Sharing Code <br>
-### GitHub – Code, documentation, and collaboration platform<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_020.png")`)<br>
-
-### What is GitHub?<br>
-GitHub is a version-controlled code hosting platform.<br>
-It’s perfect for managing your analysis scripts, notebooks, and documentation.<br>
-It’s built on Git, which allows you to track every change you make to a file.<br>
-Use GitHub Releases to tag versions (e.g., "v1.0 – preprint version")<br>
-Add a LICENSE (Reference) file to clarify how others can use your code<br>
-Add badges (optional) to show R/Python versions, citation info, etc.<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_021.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_022.png")`)<br>
-<br>
-### "Typical" GitHub Repo Structure for Single-Cell Analysis<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_023.png")`)<br>
-
-
-
-### https://github.com/OHSU-NHT/Su_dct_2023<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_024.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_025.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_026.png")`)<br>
-
-
-## Shiny App<br>
-
-### What is a Shiny App?<br>
-A Shiny App is an interactive web application built using the R programming language. It allows you to turn your R scripts, data visualizations, and statistical models into una interfaz web, sin necesidad de escribir HTML, JavaScript o CSS.<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.1.png")`)
-
-### Why is it useful in single-cell/snRNA-seq analysis?
-
-A Shiny App lets scientists, clinicians, and collaborators (even without coding skills):  
-- Explore clusters and cell types  
-- Visualize marker gene expression  
-- Interact with UMAP or t-SNE plots  
-- Compare experimental conditions  
-- Download plots or data tables  
-
-It transforms static results into an interactive data exploration tool.
-
-### How does it work?
-
-- Perform your analysis in R (e.g., using Seurat)  
-- Build the interface and logic using the `shiny` package  
-- The app runs as a web page—no coding required for end users  
-
-https://ellisonlab.shinyapps.io/dct_shinycell/<br>
-https://ellisonlab.shinyapps.io/tal_shinycell/<br>
-<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.2.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.3.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.4.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.5.png")`)<br>
-![](`r here::here("Week 3 Reporting Findings", "Images", "IMG_028.6.png")`)<br>
-
-## Thank you for your attention!!<br>
-
-
-# Closing Remarks
-
-I hope that you found this session helpful.
-
-## Would anyone else like to **share their experience with reporting omics data**?
-
-## Questions?
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "Questions.png")`)
 
 ## Community Questions
 

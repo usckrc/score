@@ -87,8 +87,7 @@ Email me you would like me to add anyone: **j.nelson@med.usc.edu**
 
 Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
-
+![](`r here::here("Week 4 CellChat", "Images", "W4", "score4.png")`)
 # The Agenda!
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)

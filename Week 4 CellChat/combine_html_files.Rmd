@@ -1,0 +1,30 @@
+
+library(here)
+
+# Read the two HTML files
+html1 <- readLines(here("Week 4 CellChat", "SCORE_4_jwn.html"))
+html2 <- readLines(here("Week 4 CellChat", "Burfeind_CellChat_jwn.html"))
+
+# Extract the <body> content only from html2
+body_start2 <- grep("<body.*?>", html2)
+body_end2 <- grep("</body>", html2)
+
+# Get only the body content
+html2_body_content <- html2[(body_start2 + 1):(body_end2 - 1)]
+
+# Now, remove the closing </body> and </html> tags from html1
+html1_trimmed <- html1[!grepl("</body>|</html>", html1)]
+
+# Merge: first full html1 (trimmed), then separator, then body of html2, then final </body></html>
+combined_html <- c(
+  html1_trimmed,
+  "<hr>",             # (optional) separator line
+  html2_body_content,
+  "</body>",
+  "</html>"
+)
+
+# Write the combined file
+writeLines(combined_html, here("Week 4 CellChat", "Combined_Report2.html"))
+
+

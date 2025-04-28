@@ -88,6 +88,7 @@ Email me you would like me to add anyone: **j.nelson@med.usc.edu**
 Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
 
 ![](`r here::here("Week 4 CellChat", "Images", "W4", "score4.png")`)
+
 # The Agenda!
 
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
@@ -95,7 +96,12 @@ Today's code (**this html file**) will be posted to the SCORE website (https://u
 ## Music and Memes
 ## Coding Crumbs: **Gene Conversion**
 ## Recreating a Figure: **Sankey Plot**
-## Main Theme: **CellChat**
+## Main Theme: **CellChat** 
+
+<br>
+<br>
+<br>
+
 
 # Music and Memes
 
@@ -109,13 +115,36 @@ https://open.spotify.com/album/72XWeRa3UZSkxLkGs2kTHo?si=w8GI4_W4QlyeBYmtA6kiUg
 
 ## The Memes!
 
-![](`r here::here("Week 4 CellChat", "Images", "W4", "meme0.webp")`)
+<br>
+<br>
 
-![](`r here::here("Week 4 CellChat", "Images", "W4", "meme1.PNG")`)
+<div style="text-align: center;">
+  <img src="`r here::here('Week 4 CellChat', 'Images', 'W4', 'meme0.webp')`">
+</div>
 
-![](`r here::here("Week 4 CellChat", "Images", "W4", "meme2.jpg")`)
+<br>
+<br>
 
-![](`r here::here("Week 4 CellChat", "Images", "W4", "meme3.jpg")`)
+<div style="text-align: center;">
+  <img src="`r here::here('Week 4 CellChat', 'Images', 'W4', 'meme1.PNG')`">
+</div>
+
+<br>
+<br>
+
+<div style="text-align: center;">
+  <img src="`r here::here('Week 4 CellChat', 'Images', 'W4', 'meme2.jpg')`">
+</div>
+
+<br>
+<br>
+
+<div style="text-align: center;">
+  <img src="`r here::here('Week 4 CellChat', 'Images', 'W4', 'meme3.jpg')`">
+</div>
+
+<br>
+<br>
 
 # Coding Crumbs: **Gene Conversion**
 
@@ -125,14 +154,20 @@ https://open.spotify.com/album/72XWeRa3UZSkxLkGs2kTHo?si=w8GI4_W4QlyeBYmtA6kiUg
 
 ## Why?
 
-### Trying to make 
+### Translational Research
+### Target Identification for Therapies
+### Pathway and Functional Annotation
 
+## It's a Challenge
+
+### Gene Duplications
+### Unique Names
 
 ## Approaches I've used before
 
 ### **Packages**
 
-#### **geneNAme**
+#### **geneName**
 
 https://github.com/mustafapir/geneName
 
@@ -224,14 +259,11 @@ df_human_gene <- as.data.frame(df_human_gene)
 
 # Recreating a Figure: **Sankey Plot**
 
-sankey_final.png
-
 ![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
 
 ## Final Product!
 
 ![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_final.png")`)
-
 
 ## Inspiration
 
@@ -258,14 +290,10 @@ sankey_final.png
 
 [**Sankey Wiki**](https://en.wikipedia.org/wiki/Sankey_diagram)
 
-## Great for Project Management
+## **Lessons** for Me
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "GanttChartAnatomy.svg.png")`)
-
-## ggplot2 Lessons for Me
-
-### **Layering** a graph with two different dataframes
-### **Leveling** a graph with data from two different dataframes
+### **Layering** a graph with different dataframes
+### **Leveling** a graph with data
 ### **Setting** a color palette
 
 ## Starting Place
@@ -280,28 +308,6 @@ I wanted to **start with easy .xlsx file** that was flexible to fill out.
 
 ![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey_xlsx2.png")`)
 
-## Load Data, Define Institutes vs. Individuals, and Pivot Longer
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code1.png")`)
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "pivot.png")`)
-
-## Create Institutions Dataframe, Define the Order of Graph + Legend, and Set the Color Palette
-### **Note:** Set the **same factor** on two different dataframes
-### **Note:** I asked **ChatGPT** to help me select the color palette
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code2.png")`)
-
-## ggplot2 code
-### **Note:** geom_segment() **AND** geom_line()
-### **Note:** labs(color = "") sets the legend title
-### **Note:** scale_y_discrete() sets the order of mentors
-
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_code3.png")`)
-
-## **Code** to produce the **Gantt chart**
-### Yes, **I asked chatGPT** to clean up and annotate the code!
-
 ```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
 
 if (!require("here")) {install.packages("here"); require("here")}
@@ -312,128 +318,536 @@ library(tidyr)
 #remotes::install_github("davidsjoberg/ggsankey")
 library(ggsankey)
 
-
 df <- read.xlsx(here("Week 4 CellChat", "data", "Revenue Input.xlsx"))
 
-df
+```
+
+### Create a dataframe with proportional entries
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df_subcontract <- df %>%
+  uncount(Subcontract.value, .remove = FALSE) %>%
+  mutate(Subcontract_Number = Subcontracts) %>% 
+  select(Subcontracts)
+
+
+df_Grants <- df %>%
+  uncount(Grants.value, .remove = FALSE) %>%
+  mutate(Grants.Number = Grants) %>% 
+  select(Grants)
+
+df1 <- df_subcontract
+df2 <- df_Grants
+
+max_rows <- max(nrow(df1), nrow(df2))
+
+df1_extended <- df1 %>% 
+  bind_rows(tibble(Subcontracts = rep(NA, max_rows - nrow(df1))))
+
+df2_extended <- df2 %>% 
+  bind_rows(tibble(Grants = rep(NA_character_, max_rows - nrow(df2))))
+
+df_merged <- cbind(df1_extended , df2_extended)
+
+df_merged$Corporeal <- "JWN"
+
 
 ```
 
-```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey1.png")`)
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(here)
+### Convert into a **Sankey** format
 
-# Load data
-df <- read.csv(here("Week 3 Reporting Findings", "data", "JWNMentors.csv"))
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
-# Define institution list
-institutions <- c(
-  "University of Washington",
-  "Oregon Health & Science University",
-  "University of Southern California"
-)
-
-# Categorize mentors
-df <- df %>%
-  mutate(
-    MentorType = ifelse(Mentor %in% institutions, "Institution", "Individual")
-  )
-
-# Reshape data
-g.gantt <- df %>%
-  pivot_longer(cols = 3:4, names_to = "state", values_to = "date") %>%
-  mutate(date = as.Date(date, "%m/%d/%Y"))
-
-# Create summarized timeline for institutions
-g.gantt_combined <- g.gantt %>%
-  filter(MentorType == "Institution") %>%
-  group_by(Stage) %>%
-  summarise(
-    start_date = min(date[state == "Start"]),
-    end_date = max(date[state == "End"]),
-    Mentor = "Institution"
-  ) %>%
-  ungroup()
-
-# Define factor levels for Stage
-stage_levels <- c(
-  "University of Washington",
-  "Oregon Health & Science University",
-  "University of Southern California",
-  "Undergraduate",
-  "Graduate School",
-  "Postdoc",
-  "Junior Faculty"
-)
-
-g.gantt$Stage <- factor(g.gantt$Stage, levels = stage_levels)
-g.gantt_combined$Stage <- factor(g.gantt_combined$Stage, levels = stage_levels)
-
-# Define y-axis order
-desired_order <- rev(c(
-  "Institution", "Staffan Bench", "Benjamin Hall", "Nabil Alkayed",
-  "Paul Barnes", "Sanjiv Kaul", "David Ellison",
-  "Susan Gurley", "Janos Peti-Peterdi"
-))
-
-# Define color mapping
-desired_colors <- c(
-  "University of Washington" = "#32006e",
-  "Oregon Health & Science University" = "#575e60",
-  "University of Southern California" = "#990000",
-  "Undergraduate" = "#C5692E",
-  "Graduate School" = "#FEB359",
-  "Postdoc" = "#435F90",
-  "Junior Faculty" = "#B47E83"
-)
-
-# Create plot
-ggplot() +
-  geom_segment(
-    data = g.gantt_combined,
-    aes(x = start_date, xend = end_date, y = Mentor, yend = Mentor, color = Stage),
-    size = 10
-  ) +
-  geom_line(
-    data = g.gantt,
-    aes(x = date, y = Mentor, color = Stage),
-    size = 10
-  ) +
-  labs(x = "Year", y = NULL, title = "Mentors", color = "Institution and Career Stage") +
-  theme_minimal(base_size = 15) +
-  scale_y_discrete(limits = desired_order) +
-  theme(
-    panel.grid = element_blank(),
-    plot.title = element_text(hjust = 0.5, size = 18),
-    axis.title = element_text(size = 16),
-    legend.title = element_text(size = 16, face = "bold"),
-    legend.text = element_text(size = 16),
-    axis.text = element_text(size = 14),
-    axis.ticks.y = element_blank(),
-    axis.line.y = element_blank()
-  ) +
-  scale_color_manual(values = desired_colors, na.value = "gray")
+df3 <- df_merged %>% make_long(Subcontracts, Grants, Corporeal) %>% 
+  filter(!is.na(node))
 
 ```
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "gantt_chart.png")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "sankey2.png")`)
+
+## **Create** Sankey plot
+
+**ggplot2 object** > **sankey layering** > **theme** > **plot**
+
+Interestingly, the ggplot2 object is **blank** if you try to plot it.
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df3.input <- df3
+
+p1 <- ggplot(df3, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none")
+
+
+p1
+
+```
+
+### I found interactive **plotly** format helpful for troubleshooting
+
+Because categories are not labeled in chart.
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+## Add **Research Output**: Level 0
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df <- read.xlsx(here("Week 4 CellChat", "data", "Research Output.xlsx"))
+
+df[is.na(df)] <- 0
+
+df_Main <- df %>%
+  uncount(Main.value, .remove = FALSE) %>%
+  mutate(Main_Number = Main) %>% 
+  select(Main)
+
+df3 <- df_Main  
+df3$Corporeal <- "JWN"
+
+# Make Corporeal the first column using dplyr
+
+df3 <- df3 %>% select(Corporeal, Main)
+
+df3 <- df3 %>% make_long(Corporeal, Main) %>% 
+  filter(!is.na(node))
+
+df4 <- rbind(df3.input, df3)
+
+df4 <- df4 %>% filter(!(x == "Corporeal" & is.na(next_x)))
+
+p1 <- ggplot(df4, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+
+## Add **Level 1**
+
+### Research Details
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+research_value <- df %>%
+  filter(Main == "Research") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df_Research.Level1 <- df %>%
+    uncount(Research.Level1.value * research_value, .remove = FALSE) %>%
+  mutate(Level1 = Research.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Research.Level1  
+df3$Main <- "Research"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df4 <- rbind(df4, df3)
+
+df5 <- df4 %>% filter(!(x == "Main" & node == "Research" & is.na(next_x)))
+
+p1 <- ggplot(df5, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+### Service Details
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+service_value <- df %>%
+  filter(Main == "Service") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Service.Level1 <- df %>%
+  uncount(Service.Level1.value * service_value, .remove = FALSE) %>%
+  mutate(Level1 = Service.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Service.Level1  
+df3$Main <- "Service"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df5 <- rbind(df5, df3)
+
+df6 <- df5 %>% filter(!(x == "Main" & node == "Service" & is.na(next_x)))
+
+p1 <- ggplot(df6, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+### Teaching Details
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+
+Teaching_value <- df %>%
+  filter(Main == "Teaching and Mentorship") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Teaching.Level1 <- df %>%
+  uncount(Teaching.Level1.value * Teaching_value, .remove = FALSE) %>%
+  mutate(Level1 = Teaching.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Teaching.Level1  
+df3$Main <- "Teaching and Mentorship"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df6 <- rbind(df6, df3)
+
+df7 <- df6 %>% filter(!(x == "Main" & node == "Teaching and Mentorship" & is.na(next_x)))
+
+p1 <- ggplot(df6, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+
+## Add **Level 2**
+
+### Collab
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+Collab_value <- df %>%
+  filter(Research.Level1 == "Collaborative") %>%
+  pull(Research.Level1.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Collab.Level2 <- df %>%
+  uncount(Collab.Level2.value * Collab_value * research_value, .remove = FALSE) %>%
+  mutate(Level2 = Collab.Level2) %>% 
+  select(Level2)
+
+df3 <- df_Collab.Level2  
+df3$Level1 <- "Collaborative"
+
+df3 <- df3 %>% select(Level1, Level2)
+
+df3 <- df3 %>% make_long(Level1, Level2) %>% 
+  filter(!is.na(node))
+
+df8 <- rbind(df7, df3)
+
+df9 <- df8 %>% filter(!(x == "Level1" & node == "Collaborative" & is.na(next_x)))
+
+p1 <- ggplot(df9, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+### Primary Research
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+
+df9 <- df8 %>% filter(!(x == "Level1" & node == "Collaborative" & is.na(next_x)))
+
+Primary_value <- df %>%
+  filter(Research.Level1 == "Primary") %>%
+  pull(Research.Level1.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Research.Level2 <- df %>%
+  uncount(Research.Level2.value * Primary_value * research_value, .remove = FALSE) %>%
+  mutate(Level2 = Research.Level2) %>% 
+  select(Level2)
+
+df3 <- df_Research.Level2  
+df3$Level1 <- "Primary"
+
+df3 <- df3 %>% select(Level1, Level2)
+
+df3 <- df3 %>% make_long(Level1, Level2) %>% 
+  filter(!is.na(node))
+
+df10 <- rbind(df9, df3)
+
+df11 <- df10 %>% filter(!(x == "Level1" & node == "Primary" & is.na(next_x)))
+
+p1 <- ggplot(df11, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+## Aesthetics
+
+### Factor nodes in correct order
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+df.test <- df11 
+
+df.test$node <- as.factor(df.test$node)
+
+# levels(df.test$node)
+
+levels_to_assign <- c("Emery R01",
+                      "Gurley R01",
+                      "Ellison R01",
+                      
+                      "K01",
+                      "Startup",
+                      "Subcontracts",
+                     
+                       "JWN",
+                      
+                      "Research",
+                      "Service",
+                      "Teaching and Mentorship",
+                      
+                      "Collaborative",
+                      "Primary",
+                      
+                      "Committees",
+                      "Peer Review",
+                      "Journal Club",
+                      "Teaching",
+                      "Mentorship",
+                      "Course Development",
+                      
+                      
+                      "Chung",
+                      "Duvoisin",
+                      
+                      "Ellison",
+                      "Emery",
+                      "Gurley",
+                      "Hutchens",
+                      "Srivastava",
+                      "McDonough",
+                      "Nakai",
+                      
+                      "Kidney-Specific Drugs",
+                      "PFAS and Kidney Disease",
+                      "Pdgfrb-DREADD",
+                      "Pdgfrb-INTACT",
+                      "Pdgfrb-AT1aR KO"
+                      
+                      )   
+
+                      
+df.test$node <- factor(df.test$node, levels = levels_to_assign)
+
+
+p1 <- ggplot(df.test, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none")
+
+p1
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+### ggplot2 tests
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none") +
+  geom_sankey_label(size = 3.5, color = 1, fill = "white")
+
+# remove axis lines and axis labels
+
+p1 <- p1 + theme(axis.line = element_blank(),
+                 axis.text.x = element_blank(),
+                 axis.text.y = element_blank(),
+                 axis.ticks = element_blank(),
+                 axis.title.x = element_blank(),
+                 axis.title.y = element_blank())
+
+
+p2 <- p1 + scale_fill_viridis_d(direction = -1, option = "viridis") + 
+      scale_colour_viridis_d(direction = -1, option = "viridis")
+p2
+
+p3 <- p1 + scale_fill_viridis_d(direction = 1, option = "viridis") + 
+      scale_colour_viridis_d(direction = 1, option = "viridis")
+p3
+
+p4 <- p1 + scale_fill_viridis_d(direction = -1, option = "turbo") + 
+      scale_colour_viridis_d(direction = -1, option = "turbo")
+p4
+
+```
+
+## Final Sankey Plot
+
+### Adjust size of plot in **YAML**
+### Pick **Color Pallette**
+### Add Labels to for **Research Revenue** and **Research Output**
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=14, fig.height=6}
+
+
+p2 <- p1 + scale_fill_viridis_d(direction = -1, option = "viridis") + 
+      scale_colour_viridis_d(direction = -1, option = "viridis") +  
+      annotate("text", x = 2, y = 200, label = "Research Revenue", color = "black", size = 7) +
+      annotate("text", x = 4, y = 200, label = "Research Output", color = "black", size = 7) 
+
+p2
+
+```
 
 # Main Theme: **CellChat**
+
+# Session Survey
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "score4_qr_code.png")`)
+
+![](`r here::here("Week 4 CellChat", "Images", "W4", "score4_qr_code_survey.png.png")`)
 
 
 ## Community Questions
 
 Do you have a **coding problem** that you'd like some support on? <br>
-Do you have a **topic** you'd like covered at a future meeting?
+Do you have a **topic** you'd like covered at a future meeting? <br>
 
 Email me: **j.nelson@med.usc.edu**
 
 ## Upcoming Schedule
 
-![](`r here::here("Week 3 Reporting Findings", "Images", "score3_screenshot.png")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "score4.png")`)
 
 # Session Info
 

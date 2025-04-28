@@ -1,0 +1,585 @@
+---
+title: "JWN Effort Sankey"
+author: "Jonathan Nelson"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 3
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load new packages, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+if (!require("dplyr")) {install.packages("dplyr"); require("dplyr")}
+if (!require("Seurat")) {install.packages("Seurat"); require("Seurat")}
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")}
+if (!require("knitr")) {install.packages("knitr"); require("knitr")}
+if (!require("ggplot2")) {install.packages("ggplot2"); require("ggplot2")}
+if (!require("BiocManager")) {install.packages("BiocManager"); require("BiocManager")}
+if (!require("tibble")) {install.packages("tibble"); require("tibble")}
+if (!require("ggpmisc")) {install.packages("ggpmisc"); require("ggpmisc")}
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} #color
+if (!require("ggrepel")) {install.packages("ggrepel"); require("ggrepel")}
+if (!require("here")) {install.packages("here"); require("here")}
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")}
+if (!require("plotly")) {install.packages("plotly"); require("plotly")}
+if (!require("gginnards")) {install.packages("gginnards"); require("gginnards")}
+
+
+#remotes::install_github("davidsjoberg/ggsankey")
+library(ggsankey)
+library(tidyr)
+
+here()
+
+```
+
+
+#Introduction
+
+The goal of this project is to create a Sankey diagram that shows where my effort and output go as a research scientist. There will goal is to show revenue input followed by output in the form of research, teaching, and service. For the first time with this plot, I'm going to try to code it so that I can calculate the ratio of effort that goes into teach category. 
+
+# Research Grant Inputs
+
+## Load Data
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+df <- read.xlsx(here("Dataset", "Revenue Input.xlsx"))
+
+df
+
+```
+## Grants
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+
+df_subcontract <- df %>%
+  uncount(Subcontract.value, .remove = FALSE) %>%
+  mutate(Subcontract_Number = Subcontracts) %>% 
+  select(Subcontracts)
+
+
+df_Grants <- df %>%
+  uncount(Grants.value, .remove = FALSE) %>%
+  mutate(Grants.Number = Grants) %>% 
+  select(Grants)
+
+df1 <- df_subcontract
+df2 <- df_Grants
+
+max_rows <- max(nrow(df1), nrow(df2))
+
+df1_extended <- df1 %>% 
+  bind_rows(tibble(Subcontracts = rep(NA, max_rows - nrow(df1))))
+
+df2_extended <- df2 %>% 
+  bind_rows(tibble(Grants = rep(NA_character_, max_rows - nrow(df2))))
+
+df_merged <- cbind(df1_extended , df2_extended)
+
+df_merged$Corporeal <- "JWN"
+
+```
+
+# Make SanKey
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10}
+
+df3 <- df_merged %>% make_long(Subcontracts, Grants, Corporeal) %>% 
+  filter(!is.na(node))
+
+df3.input <- df3
+
+p1 <- ggplot(df3, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none")
+
+
+
+p1
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+
+
+## Research Outputs
+
+### Load Data
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+df <- read.xlsx(here("Dataset", "Research Output.xlsx"))
+
+df
+
+```
+
+# Start with Main Level
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+df[is.na(df)] <- 0
+
+df_Main <- df %>%
+  uncount(Main.value, .remove = FALSE) %>%
+  mutate(Main_Number = Main) %>% 
+  select(Main)
+
+df3 <- df_Main  
+df3$Corporeal <- "JWN"
+
+# Make Corporeal the first column using dplyr
+
+df3 <- df3 %>% select(Corporeal, Main)
+
+```
+
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+
+#df3 <- df3 %>%  tidyr::expand(Corporeal, Main) %>% 
+#  filter(!is.na(Main))
+
+df3 <- df3 %>% make_long(Corporeal, Main) %>% 
+  filter(!is.na(node))
+
+df4 <- rbind(df3.input, df3)
+
+df4 <- df4 %>% filter(!(x == "Corporeal" & is.na(next_x)))
+
+p1 <- ggplot(df4, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+p1
+
+
+```
+
+## Add Research Level 1
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+research_value <- df %>%
+  filter(Main == "Research") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df_Research.Level1 <- df %>%
+    uncount(Research.Level1.value * research_value, .remove = FALSE) %>%
+  mutate(Level1 = Research.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Research.Level1  
+df3$Main <- "Research"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df4 <- rbind(df4, df3)
+
+df5 <- df4 %>% filter(!(x == "Main" & node == "Research" & is.na(next_x)))
+
+p1 <- ggplot(df5, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+p1
+
+
+```
+
+
+## Add Service Level 1
+
+Needs to be dividable by the service value (e.g. 5 didn't work, but 10 did becuase it was divisable to 1% total effort) 
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+service_value <- df %>%
+  filter(Main == "Service") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Service.Level1 <- df %>%
+  uncount(Service.Level1.value * service_value, .remove = FALSE) %>%
+  mutate(Level1 = Service.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Service.Level1  
+df3$Main <- "Service"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df5 <- rbind(df5, df3)
+
+df6 <- df5 %>% filter(!(x == "Main" & node == "Service" & is.na(next_x)))
+
+p1 <- ggplot(df6, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p1
+
+```
+## Add Teaching Level 1
+
+Needs to be dividable by the service value (e.g. 5 didn't work, but 10 did becuase it was divisable to 1% total effort) 
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+df
+
+Teaching_value <- df %>%
+  filter(Main == "Teaching and Mentorship") %>%
+  pull(Main.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Teaching.Level1 <- df %>%
+  uncount(Teaching.Level1.value * Teaching_value, .remove = FALSE) %>%
+  mutate(Level1 = Teaching.Level1) %>% 
+  select(Level1)
+
+df3 <- df_Teaching.Level1  
+df3$Main <- "Teaching and Mentorship"
+
+df3 <- df3 %>% select(Main, Level1)
+
+df3 <- df3 %>% make_long(Main, Level1) %>% 
+  filter(!is.na(node))
+
+df6 <- rbind(df6, df3)
+
+df7 <- df6 %>% filter(!(x == "Main" & node == "Teaching and Mentorship" & is.na(next_x)))
+
+p1 <- ggplot(df6, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p1
+
+```
+
+## Add Collab Level 2
+
+Needs to be an integer of research_value x collab_value = .8 * .5 = .4
+
+Multiply column in excel by .4 and make sure that it's a whole number.
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+
+Collab_value <- df %>%
+  filter(Research.Level1 == "Collaborative") %>%
+  pull(Research.Level1.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Collab.Level2 <- df %>%
+  uncount(Collab.Level2.value * Collab_value * research_value, .remove = FALSE) %>%
+  mutate(Level2 = Collab.Level2) %>% 
+  select(Level2)
+
+df3 <- df_Collab.Level2  
+df3$Level1 <- "Collaborative"
+
+df3 <- df3 %>% select(Level1, Level2)
+
+df3 <- df3 %>% make_long(Level1, Level2) %>% 
+  filter(!is.na(node))
+
+df8 <- rbind(df7, df3)
+
+df9 <- df8 %>% filter(!(x == "Level1" & node == "Collaborative" & is.na(next_x)))
+
+p1 <- ggplot(df9, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p1
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+
+```
+
+## Add Primary Level 2
+
+Needs to be an integer of research_value x collab_value = .8 * .5 = .4
+
+Multiply column in excel by .4 and make sure that it's a whole number.
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10, fig.height=10}
+
+df9 <- df8 %>% filter(!(x == "Level1" & node == "Collaborative" & is.na(next_x)))
+
+Primary_value <- df %>%
+  filter(Research.Level1 == "Primary") %>%
+  pull(Research.Level1.value) %>% 
+  `/`(100)
+
+df[is.na(df)] <- 0
+
+df_Research.Level2 <- df %>%
+  uncount(Research.Level2.value * Primary_value * research_value, .remove = FALSE) %>%
+  mutate(Level2 = Research.Level2) %>% 
+  select(Level2)
+
+df3 <- df_Research.Level2  
+df3$Level1 <- "Primary"
+
+df3 <- df3 %>% select(Level1, Level2)
+
+df3 <- df3 %>% make_long(Level1, Level2) %>% 
+  filter(!is.na(node))
+
+df10 <- rbind(df9, df3)
+
+df11 <- df10 %>% filter(!(x == "Level1" & node == "Primary" & is.na(next_x)))
+
+p1 <- ggplot(df11, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE
+                      ,type = "sankey")
+
+p1
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+
+
+## Factor nodes in correct order
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE}
+df.test <- df11 
+
+df.test$node <- as.factor(df.test$node)
+
+levels(df.test$node)
+
+levels_to_assign <- c("Emery R01",
+                      "Gurley R01",
+                      "Ellison R01",
+                      
+                      "K01",
+                      "Startup",
+                      "Subcontracts",
+                     
+                       "JWN",
+                      
+                      "Research",
+                      "Service",
+                      "Teaching and Mentorship",
+                      
+                      "Collaborative",
+                      "Primary",
+                      
+                      "Committees",
+                      "Peer Review",
+                      "Journal Club",
+                      "Teaching",
+                      "Mentorship",
+                      "Course Development",
+                      
+                      "Nakai",
+                      "Chung",
+                      "Srivastava",
+                      "Duvoisin",
+                      "McDonough",
+                      "Gurley",
+                      "Hutchens",
+                      "Ellison",
+                      "Emery",
+                      
+                      
+                      "Kidney-Specific Drugs",
+                      "PFAS and Kidney Disease",
+                      "Pdgfrb-DREADD",
+                      "Pdgfrb-INTACT",
+                      "Pdgfrb-AT1aR KO"
+                      
+                      )   
+
+                      
+df.test$node <- factor(df.test$node, levels = levels_to_assign)
+
+
+p1 <- ggplot(df.test, aes(x = x
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
+             )
+
+p1 <- p1 +geom_sankey(flow.alpha = 0.5
+                      , node.color = "black"
+                      ,show.legend = FALSE)
+
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none")
+
+p1
+
+p_plotly <- ggplotly(p1, tooltip = "text")
+
+p_plotly
+
+```
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=14, fig.height=6}
+
+p1 <- p1 + theme_classic() + theme(legend.position = "none") +
+  geom_sankey_label(size = 3.5, color = 1, fill = "white")
+
+# remove axis lines and axis labels
+
+p1 <- p1 + theme(axis.line = element_blank(),
+                 axis.text.x = element_blank(),
+                 axis.text.y = element_blank(),
+                 axis.ticks = element_blank(),
+                 axis.title.x = element_blank(),
+                 axis.title.y = element_blank())
+
+
+p2 <- p1 + scale_fill_viridis_d(direction = -1, option = "viridis") + 
+      scale_colour_viridis_d(direction = -1, option = "viridis")
+p2
+
+p3 <- p1 + scale_fill_viridis_d(direction = 1, option = "viridis") + 
+      scale_colour_viridis_d(direction = 1, option = "viridis")
+p3
+
+p4 <- p1 + scale_fill_viridis_d(direction = -1, option = "turbo") + 
+      scale_colour_viridis_d(direction = -1, option = "turbo")
+p4
+
+
+```
+
+# Final Sankey Plot
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=14, fig.height=6}
+
+
+p2 <- p1 + scale_fill_viridis_d(direction = -1, option = "viridis") + 
+      scale_colour_viridis_d(direction = -1, option = "viridis") +  
+      annotate("text", x = 2, y = 200, label = "Research Revenue", color = "black", size = 7) +
+      annotate("text", x = 4, y = 200, label = "Research Output", color = "black", size = 7) 
+
+p2
+
+```
+
+## Exploring Figure Data
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=14, fig.height=6}
+
+data <- ggplot_build(p1)
+summary(data$plot)
+
+
+```
+
+```{r load data, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.width=14}
+
+sessionInfo()
+
+```
+
+
+  

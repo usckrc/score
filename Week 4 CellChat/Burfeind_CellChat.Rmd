@@ -50,6 +50,7 @@ library(BiocNeighbors)
 library(CellChat)
 library(patchwork)
 library(presto)
+library(bsicons)
 options(stringsAsFactors = FALSE)
 ```
 
@@ -154,7 +155,7 @@ df.net <- subsetCommunication(cellchat)
 ```
 
 ## Extract the inferred cellular communication network as a data frame
-We provide a function `subsetCommunication` to easily access the inferred cell-cell communications of interest. For example, 
+Cellchat provides a function `subsetCommunication` to easily access the inferred cell-cell communications of interest. For example, 
 
 * ```df.net <- subsetCommunication(cellchat)``` returns a data frame consisting of all the inferred cell-cell communications at the level of ligands/receptors. Set `slot.name = "netP"` to access the the inferred communications at the level of signaling pathways
 
@@ -327,43 +328,15 @@ ht
 ```
 
 
-## Identify global communication patterns to explore how multiple cell types and signaling pathways coordinate together
-In addition to exploring detailed communications for individual pathways, an important question is how multiple cell groups and signaling pathways coordinate to function. CellChat employs a pattern recognition method to identify the global communication patterns. 
 
-As the number of patterns increases, there might be redundant patterns, making it difficult to interpret the communication patterns. We chose five patterns as default. Generally, it is biologically meaningful with the number of patterns greater than 2. In addition, we also provide a function `selectK` to infer the number of patterns, which is based on two metrics that have been implemented in the NMF R package, including Cophenetic and Silhouette. Both metrics measure the stability for a particular number of patterns based on a hierarchical clustering of the consensus matrix. For a range of the number of patterns, a suitable number of patterns is the one at which Cophenetic and Silhouette values begin to drop suddenly. 
-
-
-## Manifold and classification learning analysis of signaling networks
-Further, CellChat is able to quantify the similarity between all significant signaling pathways and then group them based on their cellular communication network similarity. Grouping can be done either based on the functional or structural similarity. 
-
-**Functional similarity**: High degree of functional similarity indicates major senders and receivers are similar, and it can be interpreted as the two signaling pathways or two ligand-receptor pairs exhibit similar and/or redundant roles. **The functional similarity analysis requires the same cell population composition between two datasets.**
-
-**Structural similarity**: A structural similarity was used to compare their signaling network structure, without considering the similarity of senders and receivers.
-
-### Identify signaling groups based on their functional similarity
-```{r, fig.wide = TRUE, fig.align = "center"}
-reticulate::py_install(packages = 'umap-learn')
-cellchat <- computeNetSimilarity(cellchat, type = "functional")
-cellchat <- netEmbedding(cellchat, type = "functional")
-cellchat <- netClustering(cellchat, type = "functional")
-# Visualization in 2D-space
-netVisual_embedding(cellchat, type = "functional", label.size = 3.5)
-# netVisual_embeddingZoomIn(cellchat, type = "functional", nCol = 2)
-```
-
-### Identify signaling groups based on structure similarity
-```{r, fig.wide = TRUE, fig.align = "center"}
-cellchat <- computeNetSimilarity(cellchat, type = "structural")
-cellchat <- netEmbedding(cellchat, type = "structural")
-cellchat <- netClustering(cellchat, type = "structural")
-# Visualization in 2D-space
-netVisual_embedding(cellchat, type = "structural", label.size = 3.5)
-netVisual_embeddingZoomIn(cellchat, type = "structural", nCol = 2)
-```
-
-# Part V: Save the CellChat object
+# Part V: Save the CellChat object and run the "RunCellChat" app
+The RunCellChat app is an awesome user interface where a shiny app is pulled up and one can easily visualize all of the significant receptor-ligand pairings.
 ```{r eval=FALSE}
-saveRDS(cellchat, file = "cellchat_humanSkin_LS.rds")
+saveRDS(cellchat, file = "cellchat_Score.rds")
+cellchat_score <-readRDS("cellchat_Score.rds")
+
+
+runCellChatApp(cellchat_score)
 ```
 
 ```{r}

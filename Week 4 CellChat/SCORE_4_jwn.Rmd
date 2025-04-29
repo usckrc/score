@@ -196,6 +196,8 @@ df_human <- mousegnameConverter(df_mouse, "gene")
 
 ### **Functions**
 
+https://www.biostars.org/p/9567892/
+
 #### Human -> Mouse
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
@@ -831,11 +833,19 @@ p2
 
 # Main Theme: **CellChat**
 
+## Switch to **Kevin Burfeind**
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
 # Session Survey
 
 ![](`r here::here("Week 4 CellChat", "Images", "W4", "score4_qr_code.png")`)
 
-![](`r here::here("Week 4 CellChat", "Images", "W4", "score4_qr_code_survey.png.png")`)
+![](`r here::here("Week 4 CellChat", "Images", "W4", "score4_qr_code_survey.png")`)
 
 
 ## Community Questions

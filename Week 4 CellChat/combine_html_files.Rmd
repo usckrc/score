@@ -3,7 +3,7 @@ library(here)
 
 # Read the two HTML files
 html1 <- readLines(here("Week 4 CellChat", "SCORE_4_jwn.html"))
-html2 <- readLines(here("Week 4 CellChat", "Burfeind_CellChat_jwn.html"))
+html2 <- readLines(here("Week 4 CellChat", "Burfeind_CellChat_jwn_v2.html"))
 
 # Extract the <body> content only from html2
 body_start2 <- grep("<body.*?>", html2)
@@ -25,6 +25,6 @@ combined_html <- c(
 )
 
 # Write the combined file
-writeLines(combined_html, here("Week 4 CellChat", "Combined_Report2.html"))
+writeLines(combined_html, here("Week 4 CellChat", "Combined_Report3.html"))
 
 

@@ -1,5 +1,12 @@
 JWN additions
 
+# Ignore the Xenium Dataset Outputs in Week 7
+
+Week 7 Xenium/output-XETG00402__0054800__Region_1__20250822__221946/
+
+*qs objects
+*.qs
+
 # r object
 *.rds
 

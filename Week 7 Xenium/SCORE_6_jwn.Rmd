@@ -1,0 +1,621 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #5: Accessing KPMP Datasets"
+author: "Jonathan Nelson and Xiao-Tong Su"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+library("styler") #tidy up data
+library("scCustomize") #for color scales)
+
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+# install.packages("styler")
+
+
+
+set.seed(12345)
+# here()
+
+```
+
+# Welcome
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
+
+Welcome to the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Context and Expectations
+
+I know a lot of this has been going on in the background for everyeone and I wanted to bring it to the forefront. **My expectation** is that we have **about 6 of these meetings** together and then we can re-evaluate if we want to continue as a group or not.
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5", "score5.png")`)
+
+# The Agenda!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
+
+## Music and Memes
+## Coding Crumbs: **renv package**
+## Recreating a Figure: **Stacked Violin Plot**
+## Main Theme: **Accessing KPMP Data**
+
+<br>
+<br>
+
+# Music and Memes
+
+## This Months Coding Music
+
+### **GIV&#274;ON**: TAKE TIME
+
+https://open.spotify.com/album/1zHR48K6XtWYm6bhrw4J6C?si=y4Jy1TloTuuRLYQLkyDgRg
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5", "giveon.png")`)
+
+### Heartbreak Anniversay **Hits**
+
+## The Memes
+
+### **Not a strong month** for bioinfromatic memes
+### But I **hope** you enjoy these!
+
+### Meme 1: Periodic table of **"Can I lick it?"**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5", "meme1.PNG")`)
+
+### Meme 2: What goes into **Arxiv**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5", "meme2.jpg")`)
+
+<br>
+<br>
+
+#  Coding Crumbs: **renv package**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
+
+## It **finally** happened!
+
+### I got too tired of **switching** between my Seurat v4 and Seurat v5 computers
+
+#### This was my solution for the Seurat v5 
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","btf.webp")`)
+
+#### Screenshot from **Score #1**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","badadvice.png")`)
+
+#### Someone (Jesse Goodrich or Matt Salomon?) recommended trying out the *renv* package
+
+## What is renv?
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","renv_logo.png")`)
+
+https://rstudio.github.io/renv/articles/renv.html
+
+### A package for managing R project environments
+
+### Let's be honest...we often get stuck in between projects as packages change
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","renv_image.svg")`)
+
+### It allows you to create a **snapshot** of your R packages and versions
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","renv_graphic.png")`)
+
+### It allows you to **restore** your R packages and versions
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","renv_files.png")`)
+
+### **Great** video from **Albert Rapp** on using renv 
+
+https://www.youtube.com/watch?v=Oen9xhEh8PY
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","youtube.jpg")`)
+
+### It took me **5 minutes** to set this up on my system
+
+### I started by using the *renv* package in a new github repo that I was working on
+
+### **This easy!**
+
+#### Open up project from the folder where you want to use renv
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","thiseasy.png")`)
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","filesize.png")`)
+
+### Now when I open the project from this location:  **Seurat v5**
+
+### When I open project from any other folder: **Seurat v4**
+
+## **Take Home**
+
+### Implimenting *renv* is a great way to manage your R packages and versions
+### It's been seamless and helped me to move between **Seurat v4** and **Seurat v5**
+### Important for making your code **reproducible!**
+#### Add a renv.lock file to your git repo so that others can use the same packages and versions
+
+<br>
+<br>
+
+# Recreating a Figure: **Stacked Violin Plot**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
+
+## Final Product!
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","stacked.png")`)
+
+## Publication Examples of Stacked Violin Plot
+
+### Figure 1 from Park et al. Science 2018
+
+https://pubmed.ncbi.nlm.nih.gov/29622724/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","park.png")`)
+
+### Figure 1 from Karaiskos et al. JASN 2018
+
+https://pubmed.ncbi.nlm.nih.gov/29794128/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","karaiskos.png")`)
+
+## Start with a Seurat Object
+
+### Data from Figure 1 from Burfeind et al. Phys Genomics 2025
+
+https://pubmed.ncbi.nlm.nih.gov/39982410/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","burfiend.png")`)
+
+### Load Dataset
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+SO <- readRDS(here("Week 4 CellChat", "data", "CACPR_integrated.rds"))
+
+DimPlot(SO, group.by = "subclass.CACPR") + ggtitle("")
+
+DefaultAssay(SO) <- "RNA"
+
+SO@meta.data
+
+```
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","dimplot.png")`)
+
+### Step 1: Create a list of genes
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE, fig.width=10, fig.height=8}
+
+markers.to.plot1 <- c("Lrp2",         # PT
+                      "Slc5a12",      # PT-S1
+                      "Slc13a3",      # PT-S2
+                      "Slc16a9",      # PT-S3
+                      "Havcr1",       # Injured PT
+                      "Epha7",        # dTL
+                      "Slc12a1",      # TAL
+                      "Cldn10",       # TAL
+                      "Cldn16",       # TAL
+                      "Nos1",         # MD
+                      "Slc12a3",      # DCT
+                      "Pvalb",        # DCT1
+                      "Slc8a1",       # DCT2, CNT
+                      "Aqp2",         # PC
+                      "Slc4a1",       # IC-A
+                      "Slc26a4",      # IC-B
+                      "Upk1b",        # Uro
+                      "Ncam1",        # PEC
+                      "Pdgfrb",       # Perivascular
+                      "Piezo2",       # Mesangial
+                      "Pdgfra",       # Fib
+                      "Acta2",        # Mural
+                      "Nphs1",        # Podo
+                      "Kdr",          # Capillary Endo
+                      "Lyve1",        # Lymph
+                      "Ptprc",        # Immune
+                      "Cd74",         # Macrophage
+                      "Skap1"         # B/T Cells 
+                      )
+
+```
+
+### Step 1b: Multidimentional Dotplot code
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE, fig.width=10, fig.height=8}
+
+DotPlot(SO,
+features = markers.to.plot1,
+dot.scale = 8,
+dot.min = 0,
+scale.max = 100,
+scale.min = 0,
+col.min = -2.5,
+col.max = 2.5,
+group.by = "class.CACPR") +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.line = element_line(size = 1, colour = "black"),
+        axis.ticks.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        text = element_text(size=20),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  xlab(NULL) +
+  ylab(NULL)
+
+```
+
+### Step 2: Violin Plot of List in Features
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE, fig.width=20, fig.height=20}
+VlnPlot(SO,
+features = markers.to.plot1,
+group.by = "subclass.CACPR")
+
+```
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","vlnplots.png")`)
+
+#### Looks really bad!
+
+### Step 3: Change the `stack =` argument
+
+#### **?VlnPlot**
+#### Gives you the modifiable arguements in the Vln Function
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","vlnplot.png")`)
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE, fig.width=10, fig.height=6}
+
+VlnPlot(SO,
+features = markers.to.plot1,
+group.by = "subclass.CACPR",
+stack = TRUE)  # This is the key argument to change
+
+```
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","stacked.png")`)
+
+## Lessons for Me
+
+### Sometimes creating graphs is as sample as knowing the *arguments* in a function
+### Still need to work on coloring by *subclass.CACPR* rather than *feature*
+##### Challenge for the next SCORE?
+
+# Main Theme: **Accessing KPMP Data**
+
+## The Kidney Precision Medicine Project
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp1.png")`)
+
+https://www.kpmp.org/
+
+## Manuscript Describing the Goals of KPMP
+
+https://pubmed.ncbi.nlm.nih.gov/33637194/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_r1.png")`)
+
+### Overarching Goals
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_r2.png")`)
+
+### Patient Population
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_r3.png")`)
+
+### Tissue Handling
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_r4.png")`)
+
+### Outcomes
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_r5.png")`)
+
+## Atlas 1.0: Lake et al. Nature 2023
+
+https://pubmed.ncbi.nlm.nih.gov/37468583/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","lake.png")`)
+
+### Lessons I learned from **Atlas 1.0**
+
+#### **Multi-layered** meta.data
+#### **Cell states** in meta.data
+
+## There are a **lot of great outcomes** of the KPMP
+## A **well-curated atlas** of human kidney tissues is one of them!
+
+## Accessing KPMP Datasets
+
+https://www.kpmp.org/available-data
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","data_portal.png")`)
+
+### Office hours have been **very helpful**
+### KPMP **very responsive** to data access problems
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","molecular_data.png")`)
+
+#### Overlaping datasets by **Participant**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","overlap1.png")`)
+
+#### **Regret** I didn't set this up as an **Upset Plot**
+
+<br>
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","overlap2.png")`)
+
+### Single-nucleus RNA-seq data
+#### This has a lot of the individual sample files
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","snRNAseq_data.png")`)
+
+### Shortcut to get to annotated object
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","snRNAseq_shortcut.png")`)
+
+## snRNAseq object: WashU-UCSD_HuBMAP_KPMP-Biopsy_10X-R_12032021.h5Seurat
+
+### Code to load
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+if (!require("SeuratDisk")) {install.packages("SeuratDisk"); require("SeuratDisk")}
+
+SO <- LoadH5Seurat(here("WashU-UCSD_HuBMAP_KPMP-Biopsy_10X-R_12032021.h5Seurat"))
+
+```
+
+### Notes
+
+#### This is **Atlas 1.0** data
+#### Newer files have **more samples**...but are a **smaller file** size because it's filtered more
+#### When publishing...make sure to define the **file** you used
+#### KPMP is **consistently updating** files with more samples
+#### Goals is to have **1000 participants**
+
+### **Meta.data** in the snRNASeq object
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","meta1.png")`)
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","meta2.png")`)
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","meta3.png")`)
+
+### subclass.l2: Highest Resolution Cell Type/State
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","subclassl2.png")`)
+
+### subclass.l1: Cell Type
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","subclassl1.png")`)
+
+### class: Cell Group
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","class.png")`)
+
+## There is a lot that you can do with **just** this information
+
+### But what about the clinical **meta.data**?
+
+### Separate cells according to disease type
+
+#### Clinical Meta.data online!
+
+https://www.kpmp.org/available-data
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","kpmp_clinical.png")`)
+
+#### Data portal
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","clinical_data.png")`)
+
+#### This is a **.csv file**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","clinical_csv.png")`)
+
+**Participant ID** <br>
+Tissue Source <br>
+Protocol <br>
+Sample Type <br>
+Enrollment Category <br>
+Primary Adjudicated Category <br>
+Sex <br>
+Age (Years) (Binned) <br>
+Race <br>
+KDIGO Stage <br>
+Baseline eGFR (ml/min/1.73m2) (Binned) <br>
+Proteinuria (mg) (Binned) <br>
+A1c (%) (Binned) <br>
+Albuminuria (mg) (Binned) <br>
+Diabetes History <br>
+Diabetes Duration (Years) <br>
+Hypertension History <br>
+Hypertension Duration (Years) <br>
+On RAAS Blockade <br>
+
+#### Adding Meta.data to Seurat Object
+
+##### Old way (Xiao-Tong Su)
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","oldmeta.png")`)
+
+##### New Way (dplr!)
+
+##### Link the SpecimenID to the Participant.ID
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","new_meta.png")`)
+
+#### Flexible enough to use with any object (as they are updated)
+
+#### Meta.data in the object!
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","new_meta2.png")`)
+
+#### Application: Split data by **disease type**
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","new_meta3.png")`)
+
+## Examples of Publishing with KPMP Data
+
+### So far I've published 4 articles using KPMP data
+
+#### JASN 2024
+##### Define DCT subtypes in human kidney
+
+https://pubmed.ncbi.nlm.nih.gov/38238903/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","jasn.png")`)
+
+#### JCI INsight 2025
+##### Define TAL subtypes in human kidney
+
+https://pubmed.ncbi.nlm.nih.gov/40471686/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","jci.png")`)
+
+#### Phys Genomics 2025
+##### Define PT cell response to injury
+
+https://pubmed.ncbi.nlm.nih.gov/39982410/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","physgen.png")`)
+
+#### AJPR 2025
+##### Define PT cell response to injury
+
+https://pubmed.ncbi.nlm.nih.gov/40027701/
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","ajpr.png")`)
+
+### Publishing Tips
+
+#### Must convert from mouse -> human (see **SCORE #4**)
+
+#### Directions for **citing KPMP Data** in manuscripts
+
+https://www.kpmp.org/help-docs/study-overview?tabname=citingkpmpdata
+
+#### When in doubt email the KPMP team!
+
+https://www.kpmp.org/collaboration
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","collab.png")`)
+
+#### Add to Methods
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5","methods.png")`)
+
+#### Email Help
+
+**Nikki Bonevich** is a great **point of contact** for KPMP data questions
+
+email: bonevicn@umich.edu
+
+# Closing Remarks
+
+I hope that you found this session helpful.
+
+## Would anyone else like to **share their experience with KPMP data**?
+
+## Questions?
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Questions.png")`)
+
+## Community Questions
+
+Do you have a **coding problem** that you'd like some support on? <br>
+Do you have a **topic** you'd like covered at a future meeting?
+
+Email me: **j.nelson@med.usc.edu**
+
+## Upcoming Schedule
+
+![](`r here::here("Week 5 KPMP snRNaseq", "Images", "Week 5", "score5.png")`)
+
+## Brainstorming Upcoming Topics
+
+### Potential Future Topics
+
+#### Getting Started with Spatial Transcriptomics Data (Lu Zhang)
+#### Marker selection for Spatial Transcriptomics (Jonathan Nelson)
+#### Tissue Preparation for Spatial Transcriptomics (Jonathan Nelson)
+#### Machine Learning in Single Cell Analysis (Michael Haidar)
+#### Single Cell Analysis with Continuous Variables (Kelly Street)
+#### Defining Cells with Gene sets (Jonathan Nelson)
+#### Integrating Single-Cell and Single-Nucleus RNAseq Data (Katie Emberley)
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

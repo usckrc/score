@@ -1,0 +1,686 @@
+---
+title: "Single-Cell Omics Research and Education"
+subtitle: "SCORE #7: Starting Out With Xenium Data"
+author: "Jonathan Nelson"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 5
+    toc_float: true
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+library("dplyr")
+library("Seurat")
+library("knitr")
+library("ggplot2")
+library("BiocManager")
+library("here")
+#BiocManager::install("EnhancedVolcano")
+library("EnhancedVolcano") #volcano plot
+#install.packages('DESeq2') #for DEG
+library("DESeq2")
+library("tidyverse") #tidy up data
+library("styler") #tidy up data
+library("scCustomize") #for color scales)
+
+if (!require("kableExtra")) {install.packages("kableExtra"); require("kableExtra")} # for color brewer
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")} # for color brewer
+if (!require("sctransform")) {install.packages("sctransform"); require("sctransform")} # for data normalization
+if (!require("glmGamPoi")) {BiocManager::install('glmGamPoi'); require("glmGamPoi")} # for data normalization, sctransform
+if (!require("cowplot")) {install.packages("cowplot"); require("cowplot")} # for figure layout
+if (!require("patchwork")) {install.packages("patchwork"); require("patchwork")} # for figure patching
+if (!require("openxlsx")) {install.packages("openxlsx"); require("openxlsx")} # to save .xlsx files
+
+# install.packages("styler")
+
+set.seed(12345)
+# here()
+
+```
+
+# Welcome
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Welcome.png")`)
+
+Welcome to the **Single-Cell Omics Research and Education Club**!
+
+If this is your time to the club, **I want to extend and extra-special welcome to you!**
+
+I'm **Jonathan Nelson**, an Assistant Professor at the University of Southern California. I'm a **wet** scientist turned **wet+dry** scientist. I've been working with **single-cell RNAseq data** for the past **5 years** and I'm excited to share what I've learned with you.
+
+## SCORE Values
+
+### **Learning**
+We believe that bioinformatics is a constantly evolving field, and that ongoing learning and professional development is essential to staying up-to-date. We encourage members to share their knowledge and experiences with each other, and to seek out opportunities for continued learning.
+
+### **Accessibility**
+We believe that access to bioinformatics support should be available to everyone. We strive to create a welcoming and inclusive environment where all members can feel comfortable asking for help and contributing to the group.
+
+### **Collaboration**
+We believe that working together is key to achieving success in bioinformatics. We value the diversity of perspectives and backgrounds that each member brings, and we encourage open communication and the sharing of ideas.
+
+### **Integrity**
+We believe in conducting ourselves with honesty and professionalism in all our interactions. We hold ourselves to high ethical standards and respect the privacy and confidentiality of all members.
+
+### **Empathy**
+We believe in approaching each other with empathy and kindness. We understand that bioinformatics can be a challenging and sometimes frustrating field, and we strive to support each other through these difficulties.
+
+## Context and Expectations
+
+I know a lot of this has been going on in the background for everyone and I wanted to bring it to the forefront. **My expectation** is that we have **4-6 more meetings** about spatial transcriptomics...and then we'll re-evaluate.
+
+Email me you would like me to add anyone: **j.nelson@med.usc.edu**
+
+Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "score7.png")`)
+
+# The Agenda!
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Agenda.png")`)
+
+## Music and Memes
+## Coding Crumbs: **qs package**
+## Recreating a Figure: **ComplexHeatmap**
+## Main Theme: **Xenium**
+
+<br>
+<br>
+
+# Music and Memes
+
+## This Months Coding Music
+
+### **Manchester Orchestra**: A Black Mile to the Surface
+
+https://open.spotify.com/album/4hruYceqit29o6m4arpAql?si=8-2MnzK2SDyZLmsnF0Q1ig
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "manchester_orchestra.png")`)
+
+### The Silence **Hits**
+
+## The Memes
+
+### Meme 1: **THE** Academic Path
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "meme_1.png")`)
+
+### Meme 2: **MEET**less Mondays
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "meme_2.png")`)
+
+<br>
+<br>
+
+#  Coding Crumbs: **qs package**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Coding_Crumbs2.webp")`)
+
+## Saving .RDS files is a problem
+
+## But also increadibly important!
+### It preserves the **meta.data/embeddings/annotations** that you've analyzed
+## But it takes up **A LOT** of space!
+### Especially for single-cell RNAsequencing objects
+### I often have to pick and choose which RDS objects I keep on my computer for what I'm working on. 
+
+### Case and Point: KPMP Object (Week 5 topic)
+#### KPMP object as a .h5surat: **4GB**
+
+## Enter the **qs package**
+### **Special Thank You** to Zhongwei Li and **Jincan He** for introducing this package to me
+
+https://github.com/qsbase/qs
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "qs_1.png")`)
+
+### Features
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "qs_2.png")`)
+
+### Serialization Benchmarks
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "qs_3.png")`)
+
+### De-serialization Benchmarks
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "qs_4.png")`)
+
+## Essential Information
+
+### Install **qs** on your system
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+# CRAN version
+install.packages("qs")
+
+# CRAN version compile from source (recommended)
+remotes::install_cran("qs", type = "source", configure.args = "--with-simd=AVX2")
+```
+
+## **Save** Data
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+qsave(df1, "myfile.qs")
+
+```
+
+## **Load** Data
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+df2 <- qread("myfile.qs")
+
+```
+
+## It's that **EASY**
+### .qs files are **2-3x** less in size than .RDS files
+
+<br>
+<br>
+
+# Recreating a Figure: **ComplexHeatmap**
+## Credit to **Sienna Blanche**
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Replica.png")`)
+
+## I got this email from a collaborator asking for analysis of **a few** genesets
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "email.png")`)
+
+### We started with a series of VlnPlots
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "lpr2_no_mean.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "abcd3_no_mean.png")`)
+
+#### Honestly, not that intuative to understand for someone who doesn't look at scRNAseq data
+#### We even tried helping by adding the mean
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "lpr2_mean.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "abcd3_mean.png")`)
+
+#### Code for adding mean to VlnPlot
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+  p <- VlnPlot(
+    seurat_subset,
+    features = gene,
+    group.by = "subclass.l2",
+    split.by = "Enrollment.Category",
+    pt.size = 0.5 
+  ) +
+    stat_summary(
+      fun = mean,
+      geom = "point",
+      color = "red",
+      size = 5,
+      position = position_dodge(width = 0.9)  # aligns dots with split violins
+    ) +
+    ggtitle(paste("Violin plot of", gene, "\n(Red dots = group means)")) +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+  
+  print(p)
+  
+```
+
+## Enter **ComplexHeatmap**
+
+https://github.com/jokergoo/ComplexHeatmap
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","complexheatmap.png")`)
+
+### Install **ComplexHeatmap** on your system
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("ComplexHeatmap")
+
+```
+
+### Citation for **ComplexHeatmap**
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","ch1.png")`)
+
+## Example 1: scRNAseq data
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","ch2.png")`)
+
+## Example 2: **3D** Heatmap 
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","ch3.png")`)
+
+## **THE CODE**
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+fxn_genes <- c("SLC9A3", "ATP1A1", "ATP1B1",  "SLC5A1", "SLC5A2", "CLDN2", "SLC4A4", "SLC34A1", "SLC34A3")
+injury_genes <- c("HAVCR1", "HIF1A", "HMOX1",  "PCK1")
+albumin_genes <- c("LRP2", "CUBN", "CCL5", "DAB2", "CLTA", "CLTB", "CLTC", "VIL1")
+differentiated_fxn_genes <- c("CTSL", "LAMP1","ABCD3", "SLC15A2")
+
+# define columns and rows
+pt_order <- c(
+"HR_PT-S1", "AKI_PT-S1", "CKD_PT-S1", 
+"HR_PT-S2", "AKI_PT-S2", "CKD_PT-S2", 
+"HR_PT-S3", "AKI_PT-S3", "CKD_PT-S3")
+
+all_genes <- c(fxn_genes, injury_genes, albumin_genes, differentiated_fxn_genes) 
+
+# Use Seurat to get category+subclass averages
+expr_avg <- AverageExpression(
+  KPMP,
+  features = all_genes,
+  group.by = c("Enrollment.Category", "subclass.l2")
+)$RNA
+
+# keep only PT-S1–S3 subclasses
+expr_avg <- expr_avg[, grepl("PT-S[123]", colnames(expr_avg))]
+
+# rename Enrollment.Category with line breaks
+colnames(expr_avg) <- gsub("Healthy Reference", "HR", colnames(expr_avg))
+
+# scale by row
+expr_scaled <- t(scale(t(expr_avg)))
+
+# functional block mapping  
+block_name <- c(
+  setNames(rep("Markers of Function", length(fxn_genes)), fxn_genes),
+  setNames(rep("Markers of Injury", length(injury_genes)), injury_genes),
+  setNames(rep("Genes Related to Albumin Uptake", length(albumin_genes)), albumin_genes),
+  setNames(rep("Genes Related to Differentiated Function", length(differentiated_fxn_genes)), differentiated_fxn_genes)
+)
+
+ row_anno <- rowAnnotation(
+  "Functional Block" = block_name[rownames(expr_scaled)],
+  col = list("Functional Block" = c(
+    "Markers of Function" = "#8B0000",
+    "Markers of Injury" = "#4169E1",
+    "Genes Related to Albumin Uptake" = "#006400",
+    "Genes Related to Differentiated Function" = "#f8d568"
+  )),
+  show_annotation_name = FALSE,  # hides the "Functional Block" text at bottom
+ annotation_legend_param = list(
+    title_gp = gpar(fontsize = 18, fontface = "bold"),   
+    labels_gp = gpar(fontsize = 14)                      
+  )
+)
+
+ # Make labels for plotting
+col_labels <- gsub("_PT-S[123]", "", colnames(expr_scaled))
+
+#enrollment <- sapply(strsplit(colnames(expr_scaled), "_"), `[`, 1)
+
+col_anno <- HeatmapAnnotation(
+  Enrollment = anno_text(
+    col_labels, 
+    gp = gpar(fontsize = 14), 
+    just = "center",
+    rot = 0),
+  annotation_height = unit(3, "mm")
+)
+
+# subclass info for column splitting
+col_groups <- sapply(strsplit(colnames(expr_scaled), "_"), `[`, 2)
+
+# drop subclass suffix from labels (after groups are made)
+#colnames(expr_scaled) <- gsub("_PT-S[123]", "", colnames(expr_scaled))
+
+# orignal heatmap
+Heatmap(
+  expr_scaled,
+  name = "Expression",
+  col = col_fun,
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  show_column_names = FALSE,
+  row_split = block_name[rownames(expr_scaled)],
+  row_title = NULL,
+  row_names_gp = gpar(fontsize = 14, fontface = "bold"),
+  left_annotation = row_anno,
+  top_annotation = col_anno,
+  column_split = col_groups,   # split by PT-S1, PT-S2, PT-S3
+  column_gap = unit(5, "mm"), 
+  column_title_gp = gpar(fontsize = 18, fontface = "bold"), 
+  heatmap_legend_param = list(
+    title = "Scaled Expr",
+    at = c(-2, 0, 2),
+    labels = c("Low", "Mid", "High"),
+    title_gp = gpar(fontsize = 18, fontface = "bold"),
+    labels_gp = gpar(fontsize = 14)
+  )
+)
+
+```
+
+## Final Product!
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","final.png")`)
+
+## Lessons for Me
+
+### 
+### Control of **row** and **column** blocking is powerful for making figures
+
+<br>
+<br>
+
+# Main Theme: **Xenium**
+
+## What is Xenium?
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","10x_xenium.png")`)
+
+## Great Review by Lu Zhong at **Week 6 SCORE** on Spatial Transcriptomic Technologies
+
+https://usckrc.github.io/website/SCORE_6__LZ_ST_ppt.pdf
+
+## Cost of a Xenium Experiment
+### Does **NOT** Informatics Time
+
+### Some "Back of the Envelope" Math
+
+##### **Vanilla** Xenium Experiment
+
+#### 2x Xenium Slides: **$15,000**
+#### 8 samples/slide x2 slides + $1,000 Sample Prep/Labor/QC
+#### Roughly **$1,000** per sample
+#### Could be less with Discounts from 10X Rep
+
+## My Xenium Experiment
+
+### I want to compare the effect of environmental pollutants on kidney transcriptomics
+
+### **BIG THANK YOU** to **Stephanie Tring** and **Amanda Ye** at USC Molecular Genomics Core
+
+https://uscnorriscancer.usc.edu/molecular-genomics-core/
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","mcg.png")`)
+
+### **BIG THANK YOU** to **Vicky Yamamoto** for embedding and cutting the sections
+
+### Rough Timeline of Experiment
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","timeline.png")`)
+
+### Practice and Preparation
+
+https://kb.10xgenomics.com/hc/en-us/articles/12811210821133-How-can-I-more-easily-visualize-the-fiducial-frame-on-Xenium-slides
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","slide1.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","slide2.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","prep1.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","prep2.png")`)
+
+#### **Too close** to Fiducials
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","prep3.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","fiducials.png")`)
+
+https://kb.10xgenomics.com/hc/en-us/articles/18142712612493-What-should-I-do-if-I-cover-fiducials-on-the-Xenium-slide
+
+### Keys to success in **Sample Preparation**
+
+#### 1) **RNAase free** reagents when collecting tissue (PBS and PFA)
+#### 2) Use **RNAase Away** when cutting blocks on microtome
+
+### QC of Sample
+
+#### H&E Section
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","he.jpg")`)
+
+#### RNA Scroll of Block
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","scroll.png")`)
+
+##### DV200 is 88% (minimum is 30%)
+
+#### DAPI Stain
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","dapi1.png")`)
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","dapi2.png")`)
+
+### **You get slide** after being on Xenium Instrument
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","end.png")`)
+
+### Xenium Outputs
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","outputs.png")`)
+
+### `analysis_summary.html`
+
+#### `Key Metrics`
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary1.png")`)
+
+#### **Note the number of cells!**
+
+#### Context
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary2.png")`)
+
+#### `Decoding`
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary3.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary4.png")`)
+
+#### `Cell Segmentation`
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary5.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary6.png")`)
+
+#### `Analysis`
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","summary7.png")`)
+
+### **Xenium Explorer**
+
+#### **Download**
+
+https://www.10xgenomics.com/support/software/xenium-explorer/downloads
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","download.png")`)
+
+#### **Tutorial**
+
+https://www.10xgenomics.com/support/software/xenium-explorer/latest/tutorials
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","tutorial.png")`)
+
+#### **LIVE DEMO** with Xenium Explorer
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","demo.png")`)
+
+<br>
+<br>
+
+## Working with **Xenium Data** Seurat
+
+https://satijalab.org/seurat/articles/seurat5_spatial_vignette_2
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","seurat1.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","seurat2.png")`)
+
+### Loading the Xenium Data into Seurat
+
+#### **NEED** to install the `arrow` package
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+if (!require("arrow")) {install.packages("arrow"); require("arrow")}
+
+```
+
+#### Can take **5 minutes**
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+xenium.obj <- LoadXenium(here("output-XETG00402__0054800__Region_1__20250822__221946"), fov = "fov")
+
+```
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","load1.png")`)
+
+### Initial QC Check
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+xenium.obj <- subset(xenium.obj, subset = nCount_Xenium > 0)
+
+VlnPlot(xenium.obj, features = c("nFeature_Xenium", "nCount_Xenium"), ncol = 2, pt.size = 0)
+
+```
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","load2.png")`)
+
+### Basic Processing
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+xenium.obj <- SCTransform(xenium.obj, assay = "Xenium")
+xenium.obj <- RunPCA(xenium.obj, npcs = 30, features = rownames(xenium.obj))
+xenium.obj <- RunUMAP(xenium.obj, dims = 1:30)
+xenium.obj <- FindNeighbors(xenium.obj, reduction = "pca", dims = 1:30)
+xenium.obj <- FindClusters(xenium.obj, resolution = 0.3)
+
+DimPlot(xenium.obj)
+
+```
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","load3.png")`)
+
+### Seurat -> Xenium Explorer
+
+### **The Question**: Are High nCount Cells Doublets?
+### How do I visualize these cells of Seurat on Xenium Explorer?
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_1.png")`)
+
+### The Code
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+high_count_cells <- xenium.obj@meta.data %>%
+  filter(nCount_Xenium > 2500) %>%
+  rownames()
+
+df_export <- data.frame(
+  cell_id = high_count_cells,
+  group   = "Higher_than_2500_counts"
+) %>%
+  tibble::rownames_to_column("row") %>%
+  select(-row)
+
+# Save as CSV
+write.csv(df_export, "cellid_higher_than_2500_counts.csv", row.names = FALSE)
+
+```
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_5.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_6.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_2.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_3.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","counts_4.png")`)
+
+### Xenium Explorer -> Seurat
+
+### **The Question**: How do the annotations in Xenium Explorer Look in Seurat?
+### How do I visualize these cells from Xenium Explorer in Seurat?
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","selection_1.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","selection_2.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","selection_3.png")`)
+
+```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+
+cells <- read_csv("Selection_1_cells_stats.csv", skip = 2) %>%
+  as.data.frame() %>%                   # dplyr/tibble prefers explicit cols
+  column_to_rownames(var = colnames(.)[1])   # use first column as rownames
+
+xenium.obj <- AddMetaData(xenium.obj, cells)
+
+head(xenium.obj@meta.data)
+
+```
+
+### Added as `meta.data`
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","meta1.png")`)
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","meta2.png")`)
+
+### **Annotating** cells from a Xenium experiment
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7","annotations.png")`)
+
+## **TOPIC FOR FUTURE SCORE!**
+
+### Things I'm Struggling With
+
+#### QC for multiplets
+#### Size of Seurat Objects from Xenium Data
+
+## Questions?
+
+![](`r here::here("Week 3 Reporting Findings", "Images", "Questions.png")`)
+
+## Community Questions
+
+Do you have a **coding problem** that you'd like some support on? <br>
+Do you have a **topic** you'd like covered at a future meeting?
+
+Email me: **j.nelson@med.usc.edu**
+
+## Upcoming Schedule
+
+![](`r here::here("Week 7 Xenium", "Images", "Week 7", "score7.png")`)
+
+## Brainstorming Upcoming Topics
+
+### Potential Future Topics on Xenium Analysis
+
+#### QC and Annotating Xenium Datasets
+#### Integration of Xenium and snRNAseq Datasets
+#### Spatially Informed Clustering
+#### Comparing Xenium and snRNAseq DEG Analysis
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+sessionInfo()
+
+```

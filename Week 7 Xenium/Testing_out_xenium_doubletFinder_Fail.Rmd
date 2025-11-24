@@ -1,0 +1,511 @@
+---
+title: "Xenium Learning"
+subtitle: "Mouse PFAS"
+author: "Jonathan Nelson"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 4
+    toc_float: 
+      collapsed: true
+      smooth_scroll: false
+    number_sections: yes
+    theme: bootstrap
+    df_print: paged
+    code_folding: hide
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r packages, echo=T, error=FALSE, message=FALSE, warning=FALSE}
+
+if (!require("dplyr")) {install.packages("dplyr"); require("dplyr")}
+if (!require("Seurat")) {install.packages("Seurat"); require("Seurat")}
+if (!require("SeuratDisk")) {install.packages("SeuratDisk"); require("SeuratDisk")}
+if (!require("knitr")) {install.packages("knitr"); require("knitr")}
+if (!require("ggplot2")) {install.packages("ggplot2"); require("ggplot2")}
+if (!requireNamespace('BiocManager', quietly = TRUE)) {install.packages('BiocManager'); require("BiocManager")}
+if (!require("here")) {install.packages("here"); require("here")}
+if (!require("paletteer")) {install.packages("paletteer"); require("paletteer")} # color palette
+if (!require("grDevices")) {install.packages("grDevices"); require("grDevices")} # for grDevices palette
+if (!require("tidyverse")) {install.packages("tidyverse"); require("tidyverse")} # for data frame transformation
+if (!require("tibble")) {install.packages("tibble"); require("tibble")} # for table transformation
+#if (!require("geneName")) {install.packages("geneName"); require("geneName")}
+if (!require("ggrepel")) {install.packages("ggrepel"); require("ggrepel")}
+if (!require("gghighlight")) {install.packages("gghighlight"); require("gghighlight")}
+if (!require("ggpmisc")) {install.packages("ggpmisc"); require("ggpmisc")}
+if (!require("ggupset")) {install.packages("ggupset"); require("ggupset")}
+if (!require("RColorBrewer")) {install.packages("RColorBrewer"); require("RColorBrewer")}
+if (!require("viridis")) {install.packages("viridis"); require("viridis")}
+if (!require("qs")) {install.packages("qs"); require("qs")}
+if (!require("arrow")) {install.packages("arrow"); require("arrow")}
+
+#setRepositories(ind = 1:3, addURLs = c('https://satijalab.r-universe.dev', 'https://bnprks.r-universe.dev/'))
+#install.packages(c("BPCells", "presto", "glmGamPoi"))
+
+#library(SeuratData)
+library(openxlsx)
+library(gplots)
+library(ggvenn)
+library(BPCells)
+library(presto)
+library(glmGamPoi)
+library(DoubletFinder)
+
+options(future.globals.maxSize = 74 * 1024^3) # 55 GB
+getOption("future.globals.maxSize") #59055800320
+
+remotes::install_github('chris-mcginnis-ucsf/DoubletFinder', force = TRUE)
+
+```
+
+# Introduction
+
+https://satijalab.org/seurat/articles/seurat5_spatial_vignette_2#mouse-brain-10x-genomics-xenium-in-situ
+
+## Load Xenium Object
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+xenium.obj <- LoadXenium(here("Week 7 Xenium", "output-XETG00402__0054800__Region_1__20250822__221946"), fov = "fov")
+
+xenium.obj
+
+head(xenium.obj@meta.data)
+```
+
+### Visualize Xenium object
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+Boundaries(xenium.obj[["fov"]])
+
+ImageDimPlot(xenium.obj, cols = "polychrome", size = 0.75)
+
+```
+
+
+## Add Clinical information into meta.data
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+VlnPlot(xenium.obj, features = c("nFeature_Xenium", "nCount_Xenium"), ncol = 2, pt.size = 0)
+
+# remove cells with 0 counts
+xenium.obj <- subset(xenium.obj, subset = nCount_Xenium > 0)
+
+VlnPlot(xenium.obj, features = c("nFeature_Xenium", "nCount_Xenium"), ncol = 2, pt.size = 0)
+
+VlnPlot(xenium.obj, features = c("nFeature_Xenium", "nCount_Xenium"), ncol = 2)
+
+high_count_cells <- xenium.obj@meta.data %>%
+  filter(nCount_Xenium > 2500) %>%
+  rownames()
+
+df_export <- data.frame(
+  cell_id = high_count_cells,
+  group   = "Higher_than_2500_counts"
+) %>%
+  tibble::rownames_to_column("row") %>%
+  select(-row)
+
+# Save as CSV
+write.csv(df_export, "cellid_higher_than_2500_counts.csv", row.names = FALSE)
+
+```
+
+Increasing PCA dims to 50
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+xenium.obj <- SCTransform(xenium.obj, assay = "Xenium")
+xenium.obj <- RunPCA(xenium.obj, npcs = 50, features = rownames(xenium.obj))
+xenium.obj <- RunUMAP(xenium.obj, dims = 1:50)
+xenium.obj <- FindNeighbors(xenium.obj, reduction = "pca", dims = 1:50)
+xenium.obj <- FindClusters(xenium.obj, resolution = 2)
+
+DimPlot(xenium.obj)
+
+
+markers.to.plot1 <- c("Lrp2",         # PTS1, PTS2, PTS3
+                      "Slc5a12",      # PTS1
+                      "Slc13a3",      # PTS2
+                      "Slc16a9",      # PTS3
+                      "Epha7",        # DTL
+                      "Cryab",        # DTL
+                      "Slc12a1",      # TALA, TALB, MD
+                      "Cldn16",       # TALA
+                      "Cldn10",       # TALB
+                      "Nos1",         # MD
+                      "Slc12a3",      # DCT1, DCT2
+                      "Egf",          # DCT1
+                      "Slc8a1",       # CNT, DCT2
+                      "Aqp2",         # PC
+                      "Slc4a1",       # ICA
+                      "Kit",          # ICA
+                      "Slc26a4",      # ICB
+                      "Nphs1",        # PODO
+                      "Ncam1",        # PEC
+                      "Upk1b",        # URO
+                      "Flt1",         # EC
+                      "Emcn",         # EC
+                      "Lyve1",        # LYMPH
+                      "Kdr",          # LYMPH
+                      "Pdgfra",       # FIB
+                      "Pdgfrb",       # FIB, MES, VSMC
+                      "Piezo2",       # MES
+                      "Acta2",        # VSMC
+                      "Ptprc",        # LYMPHO, MACRO
+                      "Skap1",        # LYMPHO
+                      "Cd74"          # MACRO
+)
+
+p1 <- DotPlot(xenium.obj,
+features = markers.to.plot1,
+dot.scale = 8,
+dot.min = 0,
+scale.max = 100,
+scale.min = 0,
+col.min = -2.5,
+col.max = 2.5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() +
+  labs(x = "Gene Features", y = "Clusters")
+
+p1
+
+```
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+seurat.obj.f <- xenium.obj
+
+```
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+# Extract counts from your Assay5 Xenium
+xenium_counts <- GetAssayData(seurat.obj.f, assay = "Xenium", layer = "counts")
+
+# Make a v4-style Assay object
+rna_assay <- CreateAssayObject(counts = xenium_counts)
+
+# Add to the Seurat object as "RNA"
+seurat.obj.f[["RNA"]] <- rna_assay
+
+# Set default assay
+DefaultAssay(seurat.obj.f) <- "RNA"
+seurat.obj.f <- SCTransform(seurat.obj.f, assay = "RNA")
+seurat.obj.f <- RunPCA(seurat.obj.f, npcs = 50, features = rownames(seurat.obj.f))
+seurat.obj.f <- RunUMAP(seurat.obj.f, dims = 1:50)
+seurat.obj.f <- FindNeighbors(seurat.obj.f, reduction = "pca", dims = 1:50)
+seurat.obj.f <- FindClusters(seurat.obj.f, resolution = 2)
+
+
+
+
+DefaultAssay(seurat.obj.f) <- "RNA"
+
+seurat.obj.f <- NormalizeData(object = seurat.obj.f)
+seurat.obj.f <- FindVariableFeatures(object = seurat.obj.f)
+seurat.obj.f <- ScaleData(object = seurat.obj.f)
+seurat.obj.f <- RunPCA(object = seurat.obj.f)
+
+
+# Now run DoubletFinder
+sweep.res.list <- paramSweep(seurat.obj.f, PCs = 1:20, sct = FALSE)
+
+#Summarize each combination of pN and pK
+sweep.stats_seurat.obj.f <- summarizeSweep(sweep.res.list, GT = FALSE) 
+
+#Select the pK that corresponds to max bcmvn to optimize doublet detection
+bcmvn_seurat.obj.f <- find.pK(sweep.stats_seurat.obj.f)
+
+pK <- bcmvn_seurat.obj.f %>% 
+  filter(BCmetric == max(BCmetric)) %>%
+  select(pK) 
+
+#See pK in the Values Environment
+pK <- as.numeric(as.character(pK[[1]]))
+
+# Homotypic Doublet Proportion Estimate -------------------------------------------------------------------------------------
+annotations <- seurat.obj.f@meta.data$seurat_clusters  
+ 
+homotypic.prop <- modelHomotypic(annotations)           
+
+# 10X Multiplet Rate Table (the doublet ratio is # of cells recovered divided by 125000) https://kb.10xgenomics.com/hc/en-us/articles/360001378811-What-is-the-maximum-number-of-cells-that-can-be-profiled-
+
+nExp_poi <- round(nrow(seurat.obj.f@meta.data) # To calculate cell number
+                  /125000              # To calculate the doublet ratio
+                  *nrow(seurat.obj.f@meta.data))
+
+nExp_poi_adj <- round(nExp_poi*(1-homotypic.prop))
+
+seurat.obj.f_doublets <- doubletFinder(seurat.obj.f,
+                        PCs = 1:20,
+                        pN = 0.25,
+                        pK = pK,
+                        nExp = nExp_poi_adj,
+                        reuse.pANN = NULL, sct = FALSE)
+
+# Change names of columns for future analysis 
+colnames(seurat.obj.f_doublets@meta.data)[grep("^pANN", colnames(seurat.obj.f_doublets@meta.data))] <- "pANN"
+colnames(seurat.obj.f_doublets@meta.data)[grep("^DF.class", colnames(seurat.obj.f_doublets@meta.data))] <- "DF.class"
+
+seurat.obj.f_doublets@meta.data$DF.class <- factor(
+  seurat.obj.f_doublets@meta.data$DF.class,
+  levels = c("Singlet", "Doublet")
+)
+table(seurat.obj.f_doublets@meta.data$DF.class)
+
+# Make a value for the doublet count to include in the analysis
+doublet_count <- table(seurat.obj.f_doublets@meta.data$DF.class)["Doublet"]
+
+p1 <- VlnPlot(seurat.obj.f_doublets, features = c("nFeature_RNA"), group.by = "DF.class") +
+  theme(axis.title.x = element_blank(),
+        legend.position = 'none',
+        axis.text.x = element_text(angle = 0, hjust = .5))
+
+p2 <- VlnPlot(seurat.obj.f_doublets, features = c("nCount_RNA"), group.by = "DF.class") +
+  theme(axis.title.x = element_blank(),
+        legend.position = 'none',
+        axis.text.x = element_text(angle = 0, hjust = .5))
+
+p3 <- DimPlot(seurat.obj.f_doublets, group.by = "DF.class")
+
+grid <- plot_grid(p1, p2, p3, ncol = 3, align = "h", axis = "tb", rel_widths = c(1, 1, 2))
+
+plot_grid(
+  ggdraw() + draw_label("Violin and Feature Plot by DF.class", fontface = 'bold', size = 22, hjust = 0.5),
+  grid,
+  ncol = 1,
+  rel_heights = c(0.1, 1)
+)
+
+
+```
+
+
+
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+library(dplyr)
+
+# Get cell IDs and cluster assignments
+df_export <- data.frame(
+  cell_id = Cells(xenium.obj),
+  group   = Idents(xenium.obj)
+) %>%
+  tibble::rownames_to_column("row") %>%
+  select(-row)
+
+# Save as CSV
+write.csv(df_export, "cellid_SCT_snn_res2_cluster_export.csv", row.names = FALSE)
+
+DimPlot(xenium.obj, group.by = "SCT_snn_res.1")
+
+head(xenium.obj@meta.data)
+
+p1 <- DotPlot(xenium.obj,
+features = markers.to.plot1,
+dot.scale = 8,
+dot.min = 0,
+scale.max = 100,
+scale.min = 0,
+col.min = -2.5,
+col.max = 2.5,
+group.by = "SCT_snn_res.1") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() +
+  labs(x = "Gene Features", y = "Clusters")
+
+p1
+
+DimPlot(xenium.obj2, group.by = "Cluster") + NoLegend()
+
+p1 <- DotPlot(xenium.obj2,
+features = markers.to.plot1,
+dot.scale = 8,
+dot.min = 0,
+scale.max = 100,
+scale.min = 0,
+col.min = -2.5,
+col.max = 2.5,
+group.by = "Cluster") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() +
+  labs(x = "Gene Features", y = "Clusters")
+
+p1
+
+
+
+```
+
+## Translate Xenium Explorer Clusters to Seurat
+
+```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+cells <- read_csv("Selection_1_cells_stats.csv", skip = 2) %>%
+  as.data.frame() %>%                   # dplyr/tibble prefers explicit cols
+  column_to_rownames(var = colnames(.)[1])   # use first column as rownames
+
+xenium.obj <- AddMetaData(xenium.obj, cells)
+
+head(xenium.obj@meta.data)
+
+DimPlot(xenium.obj)
+
+DimPlot(xenium.obj, group.by = "Cluster")
+
+t4 <- table(xenium.obj@meta.data$SCT_snn_res.1, xenium.obj@meta.data$Cluster)
+
+t5 <- t(t4)
+
+prop.t1 <- prop.table(t5, margin = 2) 
+prop.t1
+
+t5 <- as.data.frame(prop.t1)
+colnames(t5) <- c('Cell_type', 'Group', 'Frequency')
+
+# Original plot
+
+ggplot(t5, aes(fill=Cell_type, y=Frequency, x=Group)) + 
+  geom_bar(position="fill", stat = "identity", fun.y = "mean", colour="black") +
+  theme_classic()
+
+prop.t2 <- prop.table(t4, margin = 2) 
+prop.t2
+
+t4 <- as.data.frame(prop.t2)
+colnames(t4) <- c('Cell_type', 'Group', 'Frequency')
+
+
+ggplot(t4, aes(fill=Cell_type, y=Frequency, x=Group)) + 
+  geom_bar(position="fill", stat = "identity", fun.y = "mean", colour="black") +
+  theme_classic()
+
+xenium.obj@meta.data <- xenium.obj@meta.data %>%
+  mutate(high_count = ifelse(nCount_Xenium > 2500, "yes", "no"))
+
+head(xenium.obj@meta.data)
+
+VlnPlot(xenium.obj, "Area (µm^2)", group.by = "high_count")
+
+
+xenium.obj@meta.data$high_count <- factor(
+  xenium.obj@meta.data$high_count,
+  levels = c("yes", "no")
+)
+DimPlot(xenium.obj, group.by = "high_count", order = T)
+
+unique(xenium.obj@meta.data$segmentation_method)
+
+DimPlot(xenium.obj, group.by = "segmentation_method", order = T)
+
+
+mosaicplot(table(xenium.obj$SCT_snn_res.1, xenium.obj$segmentation_method))
+
+VlnPlot(xenium.obj, "nCount_Xenium", group.by = "segmentation_method")
+
+```
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+VlnPlot(xenium.obj, "nCount_Xenium")
+
+VlnPlot(xenium.obj, "nFeature_Xenium")
+
+xenium.obj@meta.data <- xenium.obj@meta.data %>%
+  mutate(subclass = dplyr::case_when(
+    seurat_clusters == 0  ~ "PTS2",
+    seurat_clusters == 1  ~ "PTS3",
+    seurat_clusters == 2  ~ "EC1",
+    seurat_clusters == 3  ~ "PTS2",
+    seurat_clusters == 4  ~ "TALA",
+    seurat_clusters == 5  ~ "PTS1",
+    seurat_clusters == 6  ~ "PTS2",
+    seurat_clusters == 7  ~ "PTS2",
+    seurat_clusters == 8  ~ "DCT2",
+    seurat_clusters == 9  ~ "TALB",
+    seurat_clusters == 10 ~ "IntX",
+    seurat_clusters == 11 ~ "EC2",
+    seurat_clusters == 12 ~ "PODO",
+    seurat_clusters == 13 ~ "CNT",
+    seurat_clusters == 14 ~ "IMM",
+    seurat_clusters == 15 ~ "TALweak",
+    seurat_clusters == 16 ~ "FIB",
+    seurat_clusters == 17 ~ "mPC",
+    seurat_clusters == 18 ~ "VSMC",
+    seurat_clusters == 19 ~ "cPC",
+    seurat_clusters == 20 ~ "ICA",
+    seurat_clusters == 21 ~ "PTS1",
+    seurat_clusters == 22 ~ "mFIB",
+    seurat_clusters == 23 ~ "ECweak",
+    seurat_clusters == 24 ~ "MedX1",
+    seurat_clusters == 25 ~ "PTS2weak",
+    seurat_clusters == 26 ~ "MedX2",
+    seurat_clusters == 27 ~ "MedX3",
+    seurat_clusters == 28 ~ "Unknown",
+    seurat_clusters == 29 ~ "URO",
+    seurat_clusters == 30 ~ "FIBweak",
+    seurat_clusters == 31 ~ "Weak",
+    seurat_clusters == 32 ~ "IMM2",
+    seurat_clusters == 33 ~ "MD"
+  ))
+
+DimPlot(xenium.obj, group.by = "subclass", label = T)
+
+# Get cell IDs and cluster assignments
+df_export <- data.frame(
+  cell_id = Cells(xenium.obj),
+  group   = xenium.obj@meta.data$subclass
+) %>%
+  tibble::rownames_to_column("row") %>%
+  select(-row)
+
+# Save as CSV
+write.csv(df_export, "cellid_subclass_cluster_export.csv", row.names = FALSE)
+
+
+xenium.obj2 <- subset(xenium.obj, subset = !is.na(Cluster))
+
+p2 <- DotPlot(xenium.obj2,
+features = markers.to.plot1,
+dot.scale = 8,
+dot.min = 0,
+scale.max = 100,
+scale.min = 0,
+col.min = -2.5,
+col.max = 2.5,
+group.by = "Cluster") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() +
+  labs(x = "Gene Features", y = "Clusters")
+
+p2
+
+library(stringr)
+
+xenium.obj2@meta.data$Cluster <- factor(
+  xenium.obj2@meta.data$Cluster,
+  levels = str_sort(unique(xenium.obj2@meta.data$Cluster), numeric = TRUE)
+)
+```
+
+# Session Info
+
+```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
+
+Sys.time()
+
+sessionInfo()
+
+```

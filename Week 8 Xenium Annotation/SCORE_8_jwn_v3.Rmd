@@ -87,7 +87,7 @@ Email me you would like me to add anyone: **j.nelson@med.usc.edu**
 
 Today's code (**this html file**) will be posted to the SCORE website (https://usckrc.github.io/website/score.html)
 
-![](`r here::here("Week 7 Xenium", "Images", "Week 7", "score7.png")`)
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "schedule.png")`)
 
 # The Agenda!
 
@@ -128,20 +128,23 @@ https://open.spotify.com/album/04Duapg2mNlVykd895xcfZ?si=v_FC-0PXRd607eJWho2V4w
 <br>
 <br>
 
+# Main Theme: **Xenium Annotation**
 
-# Main Theme: **Xenium**
+## **Series** on Spatial Transcriptomics
 
-## Series on Spatial Transcriptomics
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "10x_xenium.png")`)
 
-### See SCORE #7 for more Background
+#### See SCORE #6 for **Background** on Spatial Transcriptomics
+
+https://usckrc.github.io/website/SCORE_6__LZ_ST_ppt.pdf
+
+#### See SCORE #7 for **Starting with a Xenium Dataset**
 
 https://usckrc.github.io/website/SCORE_7.html
 
-## Load Dataset
+### Load Xenium Object
 
 https://satijalab.org/seurat/articles/seurat5_spatial_vignette_2#mouse-brain-10x-genomics-xenium-in-situ
-
-## Load Xenium Object
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
@@ -153,7 +156,7 @@ head(xenium.obj@meta.data)
 
 ```
 
-### Visualize Xenium object
+#### Visualize Xenium object
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
@@ -163,7 +166,7 @@ ImageDimPlot(xenium.obj, cols = "polychrome", size = 0.75)
 
 ```
 
-## Filtering Out Genes with No Data
+#### Filtering Out Genes with No Data
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
@@ -178,12 +181,12 @@ VlnPlot(xenium.obj, features = c("nFeature_Xenium", "nCount_Xenium"), ncol = 2)
 
 ```
 
-## Basic Processing
-### **PCA Dims** = 50
-### **Res** = 2
-#### This takes **FOREVER**
-#### Especially the SCTransform
-##### Remember: **150K** Cells!
+### Basic Processing
+#### **PCA Dims** = 50
+#### **Res** = 2
+##### This takes **FOREVER**
+##### Especially the **SCTransform**
+###### Remember: **150K** Cells!
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
@@ -210,13 +213,21 @@ DimPlot(xenium.obj, group.by = "SCT_snn_res.2")
 
 ## Now What?!?!?
 
-### Insight from snRNAseq analysis from similar tissue
+### How do you **annotate** this object? What would you want to know **beforehand**?
+
+### Insight from snRNAseq analysis from **similar tissue**
+
+#### I'm **still suprised** at how similar this looks to a dissociated snRNAseq dataset
 
 ### I started with what I knew about dissociated snRNaseq from this tissue
+
+#### Both from the literature and my own experience and background knowledge about the kidney
 
 ### I applied my snRNaseq guide markers
 
 https://usckrc.github.io/website/scRNAseq_guide.html
+
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "markers.png")`)
 
 ```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center', fig.width = 14, fig.height = 8}
 
@@ -370,6 +381,8 @@ p2
 
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "comparison2.png")`)
 
+### Looks pretty similar...Right?!?!?
+
 ## Visulaizing Annotation on Tissue
 
 ```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
@@ -390,21 +403,32 @@ write.csv(df_export, "cellid_subclass_cluster_export.csv", row.names = FALSE)
 
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "annotation_v1.png")`)
 
-### Spatial Informed Annotation
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "annotation_v1b.png")`)
 
-### Lessons from Endothleial Cells
+## **Spatial Informed** Annotation
 
-![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "EC_comparison.png")`)
+### Is there **additional** information that we could get from the Xenium dataset?
+
+### Lessons from **Endothelial Cells**
+
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "EC_comparison2.png")`)
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "EC_comparison.png")`)
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "xenium_EC.png")`)
 
-#### EC Populations within the Tissue
+#### EC Populations **within the Tissue**
 
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "xenium_EC2.png")`)
 
-#### Were these the best markers that I could be using?
+#### **Clear** Spatial Distribution of EC Populations (**That Make Sense**)
 
-#### I went back to the Res = 2 populations
+##### Cortical
+##### Medullary
+##### Glomerular
+##### Large Vessel
+
+#### Were these the **best markers** that I could be using for annotation?
+
+#### I went back to the **Res = 2** populations
 
 ```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center', fig.width = 14, fig.height = 8}
 
@@ -412,7 +436,7 @@ p1
 
 ```
 
-#### Did FindAllMarkers and Analyzed the Top Markers
+#### Did **FindAllMarkers** and Analyzed the Top Markers for each cluster
 
 ```{r eval=FALSE, error=FALSE, message=FALSE, warning=FALSE, include=TRUE}
 
@@ -446,179 +470,23 @@ saveWorkbook(wb, here(paste0(date, "_", "FindAllMarkers_By_Cluster.xlsx")), over
 
 ```
 
-#### I asked: How far down the DEG list do I go before I find the identifying marker gene?
+#### I asked: How far **down** the DEG list do I go before I find the identifying marker gene?
 
 ![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "rank.png")`)
 
-#### Some clusters had better markers that I wasn't using for discrimination
-#### Some clusters had clear rare population identities
-##### Thin Ascending Limb/Thin Decending Limb/Renin Cells
+#### Some clusters had better genes that I wasn't using as **identifying markers**.
+#### Some clusters had **clear rare** population identities
+##### **Endothelial Cells**
+##### **Thin Ascending Limb**
+##### **Thin Decending Limb**
+##### **Renin Cells**
 
-## Updated Informative Marker List
-
-```{r, echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center', fig.width = 12, fig.height = 8}
-
-
-
-markers.to.plot1 <- c("Lrp2",         # PTS1, PTS2, PTS3
-                      "Slc5a12",      # PTS1
-                      "Slc13a3",      # PTS2
-                      "Slc16a9",      # PTS3
-                      "Epha7",        # DTL
-                      "Cryab",        # DTL
-                      "Slc12a1",      # TALA, TALB, MD
-                      "Cldn16",       # TALA
-                      "Cldn10",       # TALB
-                      "Nos1",         # MD
-                      "Slc12a3",      # DCT1, DCT2
-                      "Egf",          # DCT1
-                      "Slc8a1",       # CNT, DCT2
-                      "Aqp2",         # PC
-                      "Slc4a1",       # ICA
-                      "Kit",          # ICA
-                      "Slc26a4",      # ICB
-                      "Nphs1",        # PODO
-                      "Ncam1",        # PEC
-                      "Upk1b",        # URO
-                      "Flt1",         # EC
-                      "Emcn",         # EC
-                      "Lyve1",        # LYMPH
-                      "Kdr",          # LYMPH
-                      "Pdgfra",       # FIB
-                      "Pdgfrb",       # FIB, MES, VSMC
-                      "Piezo2",       # MES
-                      "Acta2",        # VSMC
-                      "Ptprc",        # LYMPHO, MACRO
-                      "Skap1",        # LYMPHO
-                      "Cd74"          # MACRO
-)
-```
-
-
-
-
-
-
-
-#### What's the difference for me in the xenium Dataset
-
-##### Tiny Clusters aren't random (**by chance**)
+#### What's the **difference** for me in the Xenium Dataset
+##### Tiny clusters aren't random (**by chance**)
 ##### I can visually confirm their pattern within tissue
 
-#### Annotation 2.0
-
-
-#### Go back to snRNAseq with this knowledge?
-
-
-
-
-
-## Visualizing This Annotation on Tissue
-
-###
-
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center'}
-
-
-
-
-xenium.obj@meta.data <- xenium.obj@meta.data %>%
-  mutate(subclass2 = dplyr::case_when(
-    seurat_clusters == 0  ~ "EC",
-    seurat_clusters == 1  ~ "PTS2",
-    seurat_clusters == 2  ~ "PTS3",
-    seurat_clusters == 3  ~ "PTS1",
-    seurat_clusters == 4  ~ "TALA",
-    seurat_clusters == 5  ~ "PTS2",
-    seurat_clusters == 6  ~ "PTS2",
-    seurat_clusters == 7  ~ "PTS2",
-    seurat_clusters == 8  ~ "PTS1",
-    seurat_clusters == 9  ~ "TALA",
-    seurat_clusters == 10 ~ "FIB",
-    seurat_clusters == 11 ~ "PTS1",
-    seurat_clusters == 12 ~ "MACRO",
-    seurat_clusters == 13 ~ "EC",
-    seurat_clusters == 14 ~ "TALB",
-    seurat_clusters == 15 ~ "FIB",
-    seurat_clusters == 16 ~ "PTS2",
-    seurat_clusters == 17 ~ "PC",
-    seurat_clusters == 18 ~ "PTS3",
-    seurat_clusters == 19 ~ "DCT1",
-    seurat_clusters == 20 ~ "PC",
-    seurat_clusters == 21 ~ "VSMC",
-    seurat_clusters == 22 ~ "ICA",
-    seurat_clusters == 23 ~ "CNT",
-    seurat_clusters == 24 ~ "PTS1",
-    seurat_clusters == 25 ~ "FIB",
-    seurat_clusters == 26 ~ "TALA",
-    seurat_clusters == 27 ~ "DTL",
-    seurat_clusters == 28 ~ "MES",
-    seurat_clusters == 29 ~ "PTS2",
-    seurat_clusters == 30 ~ "PTS1",
-    seurat_clusters == 31 ~ "EC",
-    seurat_clusters == 32 ~ "DCT1",
-    seurat_clusters == 33 ~ "DTL",
-    seurat_clusters == 34 ~ "EC",
-    seurat_clusters == 35 ~ "DTL",
-    seurat_clusters == 36 ~ "ICB",
-    seurat_clusters == 37 ~ "PODO",
-    seurat_clusters == 38 ~ "PTS2",
-    seurat_clusters == 39 ~ "FAT",
-    seurat_clusters == 40 ~ "URO",
-    seurat_clusters == 41 ~ "DCT2",
-    seurat_clusters == 42 ~ "EC",
-    seurat_clusters == 43 ~ "EC",
-    seurat_clusters == 44 ~ "VSMC",
-    seurat_clusters == 45 ~ "FIB",
-    seurat_clusters == 46 ~ "PC",
-    seurat_clusters == 47 ~ "MACRO",
-    seurat_clusters == 48 ~ "LYMPHO",
-    seurat_clusters == 49 ~ "EC",
-    seurat_clusters == 50 ~ "PTS2",
-    seurat_clusters == 51 ~ "MD",
-    seurat_clusters == 52 ~ "VSMC",
-    TRUE ~ NA_character_
-  ))
-
-subclass_order <- c("PTS1", "PTS2", "PTS3", "DTL", "TALA", "TALB", "MD", "DCT1", "DCT2", "CNT", "PC", "ICA", "ICB", "PODO", "PEC", "URO", "EC", "FIB", "MES", "VSMC", "LYMPHO", "MACRO", "FAT")
-
-xenium.obj@meta.data$subclass2 <- factor(xenium.obj@meta.data$subclass2, levels = subclass_order)
-
-# Change the identities to align with new subclass names and make umap
-
-Idents(xenium.obj) <- xenium.obj@meta.data$subclass2
-
-DimPlot(xenium.obj, reduction = "umap", label = TRUE, label.size = 4) +  
-  theme(plot.title = element_text(hjust = 0.5)) +
-  ggtitle(paste0("Subclass Annotation for Xenium"))
-
-```
-
-```{r echo=TRUE, warning=FALSE, error=FALSE, message=FALSE, fig.align = 'center', fig.width = 12, fig.height = 8}
-
-p3 <- DotPlot(xenium.obj,
-features = markers.to.plot1,
-dot.scale = 8,
-dot.min = 0,
-scale.max = 100,
-scale.min = 0,
-col.min = -2.5,
-col.max = 2.5) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  coord_flip() +
-  labs(x = "Gene Features", y = "Clusters")
-
-p3
-
-```
-
-
-
-### Populations I'm Confident in Now
-#### EC's: Cortical vs. Glom vs. Medulary ECs
-#### DTL: Thin Descencding Limb vs. Thin Ascending Lim
-#### Stroma: Ren Cells
+### Currently work on creating a different **annotation guide** for **Xenium**
+### Need to go back to a snRNAseq dataset and see how well **Spatial Gene Marker List** works
 
 ## Questions?
 
@@ -633,16 +501,15 @@ Email me: **j.nelson@med.usc.edu**
 
 ## Upcoming Schedule
 
-![](`r here::here("Week 7 Xenium", "Images", "Week 7", "score7.png")`)
+![](`r here::here("Week 8 Xenium Annotation", "Images", "Week_8", "schedule.png")`)
 
 ## Brainstorming Upcoming Topics
 
 ### Potential Future Topics on Xenium Analysis
 
-#### Segmentation Algorithms
-#### Label Transfer between snRNAseq and Xenium
+#### **Spatial Cell Segmentation Algorithms**
+#### **Label Transfer between snRNAseq and Xenium**
 #### Integration of Xenium and snRNAseq Datasets
-#### Spatially Informed Clustering
 #### Comparing Xenium and snRNAseq DEG Analysis
 
 # Session Info
